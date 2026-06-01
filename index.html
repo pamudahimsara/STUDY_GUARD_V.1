@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>StudyGuard Pro v5</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#07070f;--surface:#0e0e1c;--card:#131320;--card2:#1a1a2c;--border:#22223a;
@@ -671,12 +672,146 @@ body::after{content:'';position:fixed;inset:0;
 /* Pomodoro integration hint */
 .tt-pom-hint{background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);border-radius:10px;
   padding:10px 12px;font-family:var(--mono);font-size:10px;color:var(--chem);line-height:1.7;margin-bottom:12px}
+
+/* ═══════════════════════════════════════════
+   AUTH SCREEN
+═══════════════════════════════════════════ */
+#authScreen{position:fixed;inset:0;background:var(--bg);z-index:99999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px;gap:0}
+#authScreen.hidden{display:none}
+.auth-logo{font-size:40px;font-weight:900;letter-spacing:-2px;margin-bottom:4px;
+  background:linear-gradient(135deg,#eeeeff,#a0a0cc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.auth-logo span{background:linear-gradient(135deg,var(--chem),#00b87d);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.auth-tag{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:28px}
+.auth-box{background:var(--card);border:1px solid var(--border);border-radius:24px;
+  padding:28px 28px 24px;width:100%;max-width:360px;box-shadow:0 0 60px rgba(0,229,160,.06)}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:24px;
+  background:var(--bg);border-radius:12px;padding:4px}
+.auth-tab{background:transparent;border:none;border-radius:9px;padding:9px;
+  font-family:var(--font);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s}
+.auth-tab.active{background:var(--card2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.auth-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.auth-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+.auth-inp{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;
+  padding:12px 14px;font-family:var(--font);font-size:14px;color:var(--text);outline:none;
+  transition:border-color .2s,box-shadow .2s;width:100%}
+.auth-inp:focus{border-color:var(--chem);box-shadow:0 0 0 3px rgba(0,229,160,.1)}
+.auth-btn{width:100%;border:none;border-radius:12px;padding:14px;font-family:var(--font);
+  font-size:15px;font-weight:800;cursor:pointer;background:var(--chem);color:#05050e;
+  letter-spacing:.5px;transition:transform .15s,box-shadow .2s;margin-top:4px}
+.auth-btn:hover{transform:scale(1.02);box-shadow:0 6px 24px rgba(0,229,160,.35)}
+.auth-btn:active{transform:scale(.97)}
+.auth-btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.auth-err{font-family:var(--mono);font-size:10px;color:var(--danger);text-align:center;
+  min-height:16px;margin-top:8px;line-height:1.5}
+.auth-ok{font-family:var(--mono);font-size:10px;color:var(--success);text-align:center;
+  min-height:16px;margin-top:8px;line-height:1.5}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.auth-divider span{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.auth-google{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:12px;
+  font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;background:transparent;
+  color:var(--text);letter-spacing:.3px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.auth-google:hover{border-color:var(--text);background:rgba(255,255,255,.04)}
+.auth-loading{display:flex;align-items:center;justify-content:center;gap:10px;
+  font-family:var(--mono);font-size:11px;color:var(--muted);padding:20px}
+/* User pill bottom-right */
+#userPill{position:fixed;bottom:16px;right:14px;z-index:200;
+  background:var(--card2);border:1px solid var(--border);border-radius:20px;
+  padding:7px 12px 7px 10px;font-family:var(--mono);font-size:10px;
+  display:none;align-items:center;gap:8px;cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 16px rgba(0,0,0,.4)}
+#userPill:hover{border-color:var(--chem)}
+.up-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--chem),var(--math));
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#05050e;flex-shrink:0}
+.up-name{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.up-sync{font-size:9px;color:var(--muted)}
+.sync-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sync-dot.synced{background:var(--success)}
+.sync-dot.syncing{background:var(--warn);animation:blink .6s infinite}
+.sync-dot.offline{background:var(--muted)}
 </style>
 </head>
 <body>
 
-<!-- DYNAMIC BACKGROUND CANVAS -->
-<canvas id="bgCanvas"></canvas>
+<!-- ═══════════════════════════════════════
+     AUTH SCREEN
+═══════════════════════════════════════ -->
+<div id="authScreen">
+  <div class="auth-logo">Study<span>Guard</span></div>
+  <div class="auth-tag">// AI-POWERED FOCUS ENFORCER</div>
+  <div class="auth-box">
+    <!-- Loading state -->
+    <div id="authLoading" class="auth-loading">
+      <div class="dot" style="background:var(--chem)"></div>
+      <span>Checking session...</span>
+    </div>
+    <!-- Auth forms -->
+    <div id="authForms" style="display:none">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('login',this)" id="tabLogin">Sign In</button>
+        <button class="auth-tab" onclick="switchAuthTab('signup',this)" id="tabSignup">Sign Up</button>
+      </div>
+      <!-- LOGIN FORM -->
+      <div id="authLoginForm">
+        <div class="auth-field">
+          <div class="auth-lbl">Email</div>
+          <input class="auth-inp" id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <div class="auth-lbl">Password</div>
+          <input class="auth-inp" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="auth-btn" id="loginBtn" onclick="doLogin()">Sign In →</button>
+        <div id="loginMsg" class="auth-err"></div>
+        <div style="text-align:center;margin-top:12px">
+          <button onclick="doForgotPassword()" style="background:none;border:none;color:var(--muted);font-family:var(--mono);font-size:9px;cursor:pointer;letter-spacing:1px;text-decoration:underline">Forgot password?</button>
+        </div>
+      </div>
+      <!-- SIGNUP FORM -->
+      <div id="authSignupForm" style="display:none">
+        <div class="auth-field">
+          <div class="auth-lbl">Display Name</div>
+          <input class="auth-inp" id="signupName" type="text" placeholder="Your name" autocomplete="name">
+        </div>
+        <div class="auth-field">
+          <div class="auth-lbl">Email</div>
+          <input class="auth-inp" id="signupEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <div class="auth-lbl">Password</div>
+          <input class="auth-inp" id="signupPass" type="password" placeholder="Min 8 characters" autocomplete="new-password">
+        </div>
+        <div class="auth-field">
+          <div class="auth-lbl">Confirm Password</div>
+          <input class="auth-inp" id="signupPass2" type="password" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignup()">
+        </div>
+        <button class="auth-btn" id="signupBtn" onclick="doSignup()">Create Account →</button>
+        <div id="signupMsg" class="auth-err"></div>
+      </div>
+      <!-- DIVIDER + GOOGLE -->
+      <div class="auth-divider"><span>OR</span></div>
+      <button class="auth-google" onclick="doGoogleLogin()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
+        Continue with Google
+      </button>
+    </div>
+  </div>
+  <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:20px;text-align:center;letter-spacing:1px">
+    Your data syncs across all devices · 100% private
+  </div>
+</div>
+
+<!-- USER PILL (shown when logged in) -->
+<div id="userPill" onclick="showUserMenu()">
+  <div class="up-avatar" id="upAvatar">?</div>
+  <div>
+    <div class="up-name" id="upName">User</div>
+    <div class="up-sync" id="upSync">synced</div>
+  </div>
+  <div class="sync-dot synced" id="syncDot"></div>
+</div>
 
 <!-- API KEY MODAL -->
 <div id="apiKeyModal">
@@ -1237,6 +1372,14 @@ body::after{content:'';position:fixed;inset:0;
     <div id="subjectManagerList"></div>
     <button class="subm-add" id="subAddBtn" onclick="subManagerAdd()">+ Add Subject</button>
     <button class="subm-save" onclick="subManagerSave()">💾 Apply Changes</button>
+  </div>
+  <div class="card">
+    <div class="sec-lbl">// account</div>
+    <div id="accountInfo" style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.8;margin-bottom:12px">Not signed in</div>
+    <div class="ctrl-row" style="margin:0;gap:8px">
+      <button class="ctrl-btn go" onclick="syncNow()" id="syncBtn" style="font-size:11px">☁ Sync Now</button>
+      <button class="ctrl-btn stop" onclick="doSignOut()" style="font-size:11px">↩ Sign Out</button>
+    </div>
   </div>
   <div class="card">
     <div class="sec-lbl">// about</div>
@@ -3888,6 +4031,382 @@ injectSubjectCSS();
   subManagerOpen();
 })();
 
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SUPABASE AUTH + CLOUD SYNC
+═══════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  // ── CONFIG ────────────────────────────────────────────────────
+  const SUPABASE_URL  = 'https://xmxghzuivtbzqztsxjzg.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhteGdoenVpdnRienF6dHN4anpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMzA0NzcsImV4cCI6MjA5NTkwNjQ3N30.ZOXKqhsx_Uc1vO3Jde_mVVozYGuE0jTsYtWCL-MRK8Q';
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  window._sb = sb;
+
+  // ── STATE ─────────────────────────────────────────────────────
+  let currentUser = null;
+  let syncTimer   = null;
+  let pendingSync = false;
+  let lastSyncedAt = null;
+
+  // ── AUTH TAB SWITCHER ─────────────────────────────────────────
+  window.switchAuthTab = function(tab, el){
+    document.getElementById('authLoginForm').style.display  = tab==='login'  ? '' : 'none';
+    document.getElementById('authSignupForm').style.display = tab==='signup' ? '' : 'none';
+    document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('loginMsg').textContent  = '';
+    document.getElementById('signupMsg').textContent = '';
+  };
+
+  // ── LOGIN ─────────────────────────────────────────────────────
+  window.doLogin = async function(){
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPass').value;
+    const msg   = document.getElementById('loginMsg');
+    const btn   = document.getElementById('loginBtn');
+    if(!email||!pass){msg.textContent='Please fill in all fields.';return;}
+    btn.disabled=true; btn.textContent='Signing in…';
+    msg.textContent=''; msg.className='auth-err';
+    const {error} = await sb.auth.signInWithPassword({email,password:pass});
+    if(error){
+      msg.textContent = friendlyError(error.message);
+      btn.disabled=false; btn.textContent='Sign In →';
+    }
+    // on success, onAuthStateChange fires → handleUser()
+  };
+
+  // ── SIGN UP ───────────────────────────────────────────────────
+  window.doSignup = async function(){
+    const name  = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const pass  = document.getElementById('signupPass').value;
+    const pass2 = document.getElementById('signupPass2').value;
+    const msg   = document.getElementById('signupMsg');
+    const btn   = document.getElementById('signupBtn');
+    msg.textContent=''; msg.className='auth-err';
+    if(!name||!email||!pass||!pass2){msg.textContent='Please fill in all fields.';return;}
+    if(pass.length<8){msg.textContent='Password must be at least 8 characters.';return;}
+    if(pass!==pass2){msg.textContent='Passwords do not match.';return;}
+    btn.disabled=true; btn.textContent='Creating account…';
+    const {error} = await sb.auth.signUp({
+      email, password:pass,
+      options:{data:{display_name:name}}
+    });
+    if(error){
+      msg.textContent = friendlyError(error.message);
+      btn.disabled=false; btn.textContent='Create Account →';
+    } else {
+      msg.className='auth-ok';
+      msg.textContent='✓ Account created! Check your email to confirm, then sign in.';
+      btn.disabled=false; btn.textContent='Create Account →';
+      // Switch to login tab after short delay
+      setTimeout(()=>{
+        switchAuthTab('login', document.getElementById('tabLogin'));
+        document.getElementById('loginEmail').value = email;
+      }, 2000);
+    }
+  };
+
+  // ── GOOGLE LOGIN ──────────────────────────────────────────────
+  window.doGoogleLogin = async function(){
+    await sb.auth.signInWithOAuth({
+      provider:'google',
+      options:{redirectTo: window.location.origin + window.location.pathname}
+    });
+  };
+
+  // ── FORGOT PASSWORD ───────────────────────────────────────────
+  window.doForgotPassword = async function(){
+    const email = document.getElementById('loginEmail').value.trim();
+    const msg   = document.getElementById('loginMsg');
+    if(!email){msg.textContent='Enter your email above first.';return;}
+    msg.className='auth-err'; msg.textContent='Sending…';
+    const {error} = await sb.auth.resetPasswordForEmail(email,{
+      redirectTo: window.location.origin + window.location.pathname + '?reset=1'
+    });
+    msg.className = error ? 'auth-err' : 'auth-ok';
+    msg.textContent = error ? friendlyError(error.message) : '✓ Reset link sent! Check your email.';
+  };
+
+  // ── SIGN OUT ──────────────────────────────────────────────────
+  window.doSignOut = async function(){
+    if(!confirm('Sign out? Your data is safely saved in the cloud.')) return;
+    await syncToCloud();   // final save
+    await sb.auth.signOut();
+    currentUser = null;
+    showAuthScreen();
+  };
+
+  // ── USER MENU ─────────────────────────────────────────────────
+  window.showUserMenu = function(){
+    showPage('settings', document.querySelector('[onclick*="settings"]'));
+  };
+
+  // ── HANDLE AUTHENTICATED USER ─────────────────────────────────
+  async function handleUser(user){
+    currentUser = user;
+    const name = user.user_metadata?.display_name || user.email.split('@')[0];
+
+    // Update user pill
+    const pill = document.getElementById('userPill');
+    pill.style.display = 'flex';
+    document.getElementById('upAvatar').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('upName').textContent   = name;
+
+    // Update settings account info
+    const ai = document.getElementById('accountInfo');
+    if(ai) ai.innerHTML =
+      `Signed in as <b style="color:var(--chem)">${user.email}</b><br>` +
+      `<span style="color:var(--muted)">User ID: ${user.id.slice(0,8)}…</span>`;
+
+    // Load cloud data → merge into app
+    setSyncStatus('syncing','Loading…');
+    await loadFromCloud();
+    setSyncStatus('synced','Synced');
+
+    // Hide auth screen, show app
+    hideAuthScreen();
+
+    // Auto-sync every 60 seconds
+    clearInterval(syncTimer);
+    syncTimer = setInterval(()=>{if(pendingSync)syncToCloud();}, 60000);
+  }
+
+  // ── LOAD DATA FROM CLOUD → MERGE INTO APP ─────────────────────
+  async function loadFromCloud(){
+    try{
+      const {data,error} = await sb
+        .from('user_data')
+        .select('data')
+        .eq('user_id', currentUser.id)
+        .single();
+
+      if(error && error.code==='PGRST116'){
+        // No row yet — first login, push local data up
+        await syncToCloud();
+        return;
+      }
+      if(error) throw error;
+
+      const cloud = data.data || {};
+
+      // Merge: cloud wins over defaults, but keep timers/intervals reset
+      if(cloud.state){
+        const merged = Object.assign({}, DEFAULT_S, lsGet(LS_KEY,{}), cloud.state);
+        merged.running=false; merged.paused=false;
+        merged.tickId=null; merged.sessId=null;
+        merged.pomRunning=false; merged.pomId=null; merged.pomBreakId=null;
+        // Write back to localStorage so app picks it up
+        lsSet(LS_KEY, merged);
+        Object.assign(S, merged);
+      }
+      if(cloud.marks)   { MARKS = cloud.marks;        lsSet(LS_MARKS,   MARKS); }
+      if(cloud.cards)   { CUSTOM_CARDS = cloud.cards; lsSet(LS_CARDS,   CUSTOM_CARDS); }
+      if(cloud.srs)     { SRS_DATA = cloud.srs;        lsSet(LS_SRS,     SRS_DATA); }
+      if(cloud.reports) { lsSet(LS_REPORTS, cloud.reports); }
+      if(cloud.subs)    { lsSet('studyguard_subs_v5', cloud.subs); }
+      if(cloud.tt)      {
+        try{
+          const ttKeys = Object.keys(cloud.tt);
+          ttKeys.forEach(k=>localStorage.setItem(k, JSON.stringify(cloud.tt[k])));
+        }catch(e){}
+      }
+
+      // Re-render UI with fresh data
+      refreshUIAfterLoad();
+      lastSyncedAt = new Date();
+    }catch(e){
+      console.warn('Cloud load failed:', e);
+      setSyncStatus('offline','Offline');
+    }
+  }
+
+  // ── SYNC LOCAL DATA → CLOUD ────────────────────────────────────
+  window.syncToCloud = async function(){
+    if(!currentUser){ pendingSync=true; return; }
+    setSyncStatus('syncing','Syncing…');
+    try{
+      // Gather all timetable localStorage keys
+      const tt = {};
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(k && k.startsWith('sg_tt_')){
+          try{ tt[k]=JSON.parse(localStorage.getItem(k)); }catch(e){}
+        }
+      }
+
+      const payload = {
+        user_id: currentUser.id,
+        updated_at: new Date().toISOString(),
+        data: {
+          state:   lsGet(LS_KEY, {}),
+          marks:   lsGet(LS_MARKS, {}),
+          cards:   lsGet(LS_CARDS, {}),
+          srs:     lsGet(LS_SRS, {}),
+          reports: lsGet(LS_REPORTS, []),
+          subs:    lsGet('studyguard_subs_v5', null),
+          tt
+        }
+      };
+
+      const {error} = await sb.from('user_data').upsert(payload, {onConflict:'user_id'});
+      if(error) throw error;
+
+      pendingSync = false;
+      lastSyncedAt = new Date();
+      const mins = 'just now';
+      setSyncStatus('synced', mins);
+      document.getElementById('upSync').textContent = 'synced';
+    }catch(e){
+      console.warn('Sync failed:', e);
+      setSyncStatus('offline','Sync failed');
+      pendingSync = true;
+    }
+  };
+
+  // ── SYNC NOW BUTTON ────────────────────────────────────────────
+  window.syncNow = async function(){
+    if(!currentUser){toast('Not signed in','bad');return;}
+    await syncToCloud();
+    toast('☁ Data synced to cloud!','ok');
+  };
+
+  // ── PATCH SAVESTATE TO MARK PENDING SYNC ──────────────────────
+  const _origSaveState = window.saveState;
+  window.saveState = function(){
+    if(_origSaveState) _origSaveState();
+    pendingSync = true;
+    setSyncStatus('syncing','Pending…');
+    // Debounce: sync 5s after last save
+    clearTimeout(window._syncDebounce);
+    window._syncDebounce = setTimeout(()=>{
+      if(currentUser && pendingSync) syncToCloud();
+    }, 5000);
+  };
+
+  // ── ALSO PATCH lsSet TO CAPTURE MARKS/CARDS/SRS CHANGES ──────
+  const _origLsSet = window.lsSet;
+  window.lsSet = function(key, val){
+    _origLsSet(key, val);
+    pendingSync = true;
+    clearTimeout(window._syncDebounce);
+    window._syncDebounce = setTimeout(()=>{
+      if(currentUser && pendingSync) syncToCloud();
+    }, 5000);
+  };
+
+  // ── REFRESH UI AFTER LOADING CLOUD DATA ───────────────────────
+  function refreshUIAfterLoad(){
+    try{
+      // Re-run the same init logic the app uses
+      updateLevel();
+      updateBreakdown();
+      updateGoalBar();
+      renderMarksPage();
+      renderTodos();
+      rotateMoti();
+      initHeatmap();
+      checkAchievements();
+      renderReports();
+      // Subjects
+      const saved = lsGet('studyguard_subs_v5', null);
+      if(saved) renderAllSubjectUI();
+      injectSubjectCSS();
+      Object.keys(SUBS).forEach(k=>{if(!S.subTime[k])S.subTime[k]=0;});
+    }catch(e){
+      // Non-critical; app still works
+    }
+  }
+
+  // ── SYNC STATUS ────────────────────────────────────────────────
+  function setSyncStatus(state, label){
+    const dot  = document.getElementById('syncDot');
+    const sync = document.getElementById('upSync');
+    if(dot){dot.className='sync-dot '+state;}
+    if(sync){sync.textContent = label;}
+  }
+
+  // ── SHOW/HIDE AUTH SCREEN ──────────────────────────────────────
+  function showAuthScreen(){
+    document.getElementById('authScreen').classList.remove('hidden');
+    document.getElementById('userPill').style.display = 'none';
+    document.getElementById('authLoading').style.display = 'none';
+    document.getElementById('authForms').style.display   = '';
+  }
+
+  function hideAuthScreen(){
+    document.getElementById('authScreen').classList.add('hidden');
+  }
+
+  // ── FRIENDLY ERROR MESSAGES ────────────────────────────────────
+  function friendlyError(msg){
+    if(msg.includes('Invalid login'))    return 'Wrong email or password.';
+    if(msg.includes('Email not confirmed')) return 'Please confirm your email first.';
+    if(msg.includes('User already registered')) return 'An account with this email already exists.';
+    if(msg.includes('Password should'))  return 'Password must be at least 8 characters.';
+    if(msg.includes('rate limit'))       return 'Too many attempts. Please wait a minute.';
+    return msg;
+  }
+
+  // ── LISTEN FOR AUTH STATE CHANGES ─────────────────────────────
+  sb.auth.onAuthStateChange(async (event, session)=>{
+    if(event==='SIGNED_IN' && session?.user){
+      await handleUser(session.user);
+    } else if(event==='SIGNED_OUT'){
+      currentUser = null;
+      clearInterval(syncTimer);
+      showAuthScreen();
+    } else if(event==='PASSWORD_RECOVERY'){
+      // handled by redirect
+    }
+  });
+
+  // ── INITIAL SESSION CHECK ──────────────────────────────────────
+  (async function init(){
+    const {data:{session}} = await sb.auth.getSession();
+    if(session?.user){
+      await handleUser(session.user);
+    } else {
+      // No session — show login
+      document.getElementById('authLoading').style.display = 'none';
+      document.getElementById('authForms').style.display   = '';
+    }
+  })();
+
+  // ── SYNC ON PAGE UNLOAD ────────────────────────────────────────
+  window.addEventListener('beforeunload', ()=>{
+    if(currentUser && pendingSync){
+      // Best-effort beacon sync
+      const payload = JSON.stringify({
+        user_id: currentUser.id,
+        updated_at: new Date().toISOString(),
+        data:{
+          state:lsGet(LS_KEY,{}),
+          marks:lsGet(LS_MARKS,{}),
+          cards:lsGet(LS_CARDS,{}),
+          srs:lsGet(LS_SRS,{}),
+          reports:lsGet(LS_REPORTS,[])
+        }
+      });
+      navigator.sendBeacon &&
+        navigator.sendBeacon(
+          SUPABASE_URL+'/rest/v1/user_data',
+          new Blob([payload],{type:'application/json'})
+        );
+    }
+  });
+
+  // ── SYNC ON VISIBILITY CHANGE (tab comes back) ─────────────────
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState==='visible' && currentUser && pendingSync){
+      syncToCloud();
+    }
+  });
+
+})();
 </script>
 </body>
 </html>
