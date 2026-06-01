@@ -4366,11 +4366,24 @@ injectSubjectCSS();
 
   // ── INITIAL SESSION CHECK ──────────────────────────────────────
   (async function init(){
-    const {data:{session}} = await sb.auth.getSession();
-    if(session?.user){
-      await handleUser(session.user);
-    } else {
-      // No session — show login
+    // Safety timeout — if Supabase takes >5s, just show login
+    const timeout = setTimeout(()=>{
+      document.getElementById('authLoading').style.display = 'none';
+      document.getElementById('authForms').style.display   = '';
+    }, 5000);
+
+    try{
+      const {data, error} = await sb.auth.getSession();
+      clearTimeout(timeout);
+      if(data?.session?.user){
+        await handleUser(data.session.user);
+      } else {
+        document.getElementById('authLoading').style.display = 'none';
+        document.getElementById('authForms').style.display   = '';
+      }
+    } catch(e){
+      clearTimeout(timeout);
+      console.warn('Session check failed:', e);
       document.getElementById('authLoading').style.display = 'none';
       document.getElementById('authForms').style.display   = '';
     }
