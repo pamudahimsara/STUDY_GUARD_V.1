@@ -2002,6 +2002,7 @@ function handleMiss(){
     toast('❌ Missed! Restarting...','bad');
     setTimeout(()=>{S.remaining=S.intervalSec;S.warnFired=false;
       S.running=true;
+      clearInterval(S.tickId);clearInterval(S.sessId);S.sessId=null;
       S.tickId=setInterval(tick,1000);
       S.sessId=setInterval(()=>{if(!S.paused){S.elapsedSec++;S.subTime[S.currentSub]++;todayHeat();updateBreakdown();updateGoalBar();if(S.elapsedSec%30===0){saveState();autoSaveReport();}}},1000);
       setStatus('ACTIVE','g');},1800);
@@ -2023,7 +2024,9 @@ function doCheckIn(e){
   const xpGain=10+S.streak*2;S.xp+=xpGain;
   if(S.streak>S.bestStreak)S.bestStreak=S.streak;
   S.remaining=S.intervalSec;S.warnFired=false;
-  clearInterval(S.tickId);S.tickId=setInterval(tick,1000);
+  clearInterval(S.tickId);clearInterval(S.sessId);S.sessId=null;
+  S.tickId=setInterval(tick,1000);
+  S.sessId=setInterval(()=>{if(!S.paused){S.elapsedSec++;S.subTime[S.currentSub]++;todayHeat();updateBreakdown();updateGoalBar();if(S.elapsedSec%30===0){saveState();autoSaveReport();}}},1000);
   document.getElementById('missWarn').classList.remove('show');
   beep('success');updateStats();updateLevel();
   addLog('Check-in ✓ (+'+xpGain+'XP)','ok');
@@ -2112,6 +2115,7 @@ function checkLockMCQ(chosen,el){
     setTimeout(()=>{
       document.getElementById('lockScreen').classList.remove('active');
       S.remaining=S.intervalSec;S.warnFired=false;S.running=true;
+      clearInterval(S.tickId);clearInterval(S.sessId);S.sessId=null;
       S.tickId=setInterval(tick,1000);
       S.sessId=setInterval(()=>{if(!S.paused){S.elapsedSec++;S.subTime[S.currentSub]++;todayHeat();updateBreakdown();updateGoalBar();if(S.elapsedSec%30===0){saveState();autoSaveReport();}}},1000);
       setStatus('ACTIVE','g');
@@ -3086,6 +3090,7 @@ function renderReports(){
     const subKeys2=Object.keys(SUBS);
     const total=subKeys2.reduce((s,k)=>(st[k]||0)+s,0)||1;
     const acc=r.checkins+r.missed>0?Math.round(r.checkins/(r.checkins+r.missed)*100)+'%':'—';
+    const isToday=r.date===today;
     const subBars=subKeys2.map(k=>{
       const sb=SUBS[k];const pct=((st[k]||0)/total*100).toFixed(0);
       return`<div class="report-bar-row"><div class="report-bar-lbl" style="color:${sb.color}">${sb.icon} ${sb.name.slice(0,5)}</div>
@@ -3093,11 +3098,13 @@ function renderReports(){
         <div class="report-bar-t">${Math.floor((st[k]||0)/60)}m</div></div>`;
     }).join('');
     return`<div class="report-card">
-      <div class="report-date">${r.date===today?'📍 TODAY — ':''} ${fmtDate(r.date)}</div>
+      <div class="report-date">${isToday?'📍 TODAY — ':''} ${fmtDate(r.date)}</div>
       <div class="report-stats">
         <div class="report-stat"><div class="report-stat-v" style="color:var(--chem)">${r.elapsedMin}m</div><div class="report-stat-l">Study Time</div></div>
         <div class="report-stat"><div class="report-stat-v" style="color:var(--success)">${r.checkins}</div><div class="report-stat-l">Check-ins</div></div>
+        <div class="report-stat"><div class="report-stat-v" style="color:var(--danger)">${r.missed||0}</div><div class="report-stat-l">Missed</div></div>
         <div class="report-stat"><div class="report-stat-v" style="color:var(--warn)">${acc}</div><div class="report-stat-l">Accuracy</div></div>
+        <div class="report-stat"><div class="report-stat-v" style="color:var(--math)">${r.bestStreak||0}</div><div class="report-stat-l">Best Streak</div></div>
       </div>
       ${subBars}
     </div>`;
@@ -4466,6 +4473,8 @@ injectSubjectCSS();
 
   // ── LOAD DATA FROM CLOUD → MERGE INTO APP ─────────────────────
   async function loadFromCloud(){
+    let _loadingFromCloud = true; // flag to suppress sync triggers during load
+    const _origPendingSync = pendingSync;
     try{
       const {data,error} = await sb
         .from('user_data')
@@ -4475,12 +4484,17 @@ injectSubjectCSS();
 
       if(error && error.code==='PGRST116'){
         // No row yet — first login, push local data up
+        _loadingFromCloud = false;
         await syncToCloud();
         return;
       }
       if(error) throw error;
 
       const cloud = data.data || {};
+
+      // Temporarily disable the sync debounce so lsSet calls below don't immediately re-upload
+      clearTimeout(window._syncDebounce);
+      pendingSync = false;
 
       // Merge: cloud wins over defaults, but keep timers/intervals reset
       if(cloud.state){
@@ -4504,10 +4518,17 @@ injectSubjectCSS();
         }catch(e){}
       }
 
+      // After all lsSet calls, clear the debounce and reset pendingSync to false
+      clearTimeout(window._syncDebounce);
+      pendingSync = false;
+      _loadingFromCloud = false;
+
       // Re-render UI with fresh data
       refreshUIAfterLoad();
       lastSyncedAt = new Date();
     }catch(e){
+      _loadingFromCloud = false;
+      pendingSync = _origPendingSync;
       console.warn('Cloud load failed:', e);
       setSyncStatus('offline','Offline');
     }
@@ -4605,6 +4626,10 @@ injectSubjectCSS();
       if(saved) renderAllSubjectUI();
       injectSubjectCSS();
       Object.keys(SUBS).forEach(k=>{if(!S.subTime[k])S.subTime[k]=0;});
+      // Timetable home widget
+      try{ if(typeof ttUpdateHomeWidget==='function') ttUpdateHomeWidget(); }catch(e){}
+      // Also update stats display
+      try{ updateStats(); updateRing(); updateTimerCard(); }catch(e){}
     }catch(e){
       // Non-critical; app still works
     }
