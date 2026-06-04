@@ -3255,6 +3255,13 @@ function ttSave(){
   lsSet(TT_NOTES_KEY, TT_NOTES_DATA);
   lsSet(TT_EXAM_KEY, TT_EXAM);
   ttUpdateHomeWidget();
+  // Trigger cloud sync (same debounce as saveState)
+  if(typeof window._sb !== 'undefined'){
+    clearTimeout(window._ttSyncDebounce);
+    window._ttSyncDebounce = setTimeout(()=>{
+      if(typeof syncToCloud === 'function') syncToCloud();
+    }, 5000);
+  }
 }
 
 // Convert block index to time string
@@ -4229,6 +4236,23 @@ injectSubjectCSS();
           ttKeys.forEach(k=>localStorage.setItem(k, JSON.stringify(cloud.tt[k])));
         }catch(e){}
       }
+      // Restore timetable data from cloud
+      if(cloud.ttdata)  {
+        lsSet('studyguard_timetable_v1', cloud.ttdata);
+        if(typeof TT_DATA !== 'undefined') Object.assign(TT_DATA, cloud.ttdata);
+      }
+      if(cloud.ttnotes) {
+        lsSet('studyguard_tt_notes_v1', cloud.ttnotes);
+        if(typeof TT_NOTES_DATA !== 'undefined') Object.assign(TT_NOTES_DATA, cloud.ttnotes);
+      }
+      if(cloud.ttexam)  {
+        lsSet('studyguard_tt_exam_v1', cloud.ttexam);
+        if(typeof TT_EXAM !== 'undefined') { TT_EXAM = cloud.ttexam; }
+      }
+      if(cloud.ttach && Array.isArray(cloud.ttach)) {
+        localStorage.setItem('studyguard_tt_ach', JSON.stringify(cloud.ttach));
+        if(typeof TT_ACH_UNLOCKED !== 'undefined') { TT_ACH_UNLOCKED = cloud.ttach; }
+      }
 
       // Re-render UI with fresh data
       refreshUIAfterLoad();
@@ -4257,13 +4281,17 @@ injectSubjectCSS();
         user_id: currentUser.id,
         updated_at: new Date().toISOString(),
         data: {
-          state:   lsGet(LS_KEY, {}),
-          marks:   lsGet(LS_MARKS, {}),
-          cards:   lsGet(LS_CARDS, {}),
-          srs:     lsGet(LS_SRS, {}),
-          reports: lsGet(LS_REPORTS, []),
-          subs:    lsGet('studyguard_subs_v5', null),
-          tt
+          state:    lsGet(LS_KEY, {}),
+          marks:    lsGet(LS_MARKS, {}),
+          cards:    lsGet(LS_CARDS, {}),
+          srs:      lsGet(LS_SRS, {}),
+          reports:  lsGet(LS_REPORTS, []),
+          subs:     lsGet('studyguard_subs_v5', null),
+          tt,
+          ttdata:   lsGet('studyguard_timetable_v1', {}),
+          ttnotes:  lsGet('studyguard_tt_notes_v1', {}),
+          ttexam:   lsGet('studyguard_tt_exam_v1', {date:'',name:'A/L Examination'}),
+          ttach:    JSON.parse(localStorage.getItem('studyguard_tt_ach')||'[]')
         }
       };
 
@@ -4331,6 +4359,15 @@ injectSubjectCSS();
       if(saved) renderAllSubjectUI();
       injectSubjectCSS();
       Object.keys(SUBS).forEach(k=>{if(!S.subTime[k])S.subTime[k]=0;});
+      // Refresh timetable home widget and grid if open
+      if(typeof ttUpdateHomeWidget === 'function') ttUpdateHomeWidget();
+      if(typeof ttRenderAchievements === 'function') ttRenderAchievements();
+      if(document.getElementById('page-timetable')?.classList.contains('active')){
+        if(typeof ttRenderGrid === 'function') ttRenderGrid();
+        if(typeof ttUpdateStats === 'function') ttUpdateStats();
+        if(typeof ttUpdateCountdown === 'function') ttUpdateCountdown();
+        if(typeof ttAnalytics === 'function') ttAnalytics();
+      }
     }catch(e){
       // Non-critical; app still works
     }
