@@ -1992,7 +1992,7 @@ function tick(){
 
 function handleMiss(){
   S.missed++;S.consecutiveMisses++;S.streak=0;
-  clearInterval(S.tickId);S.running=false;
+  clearInterval(S.tickId);clearInterval(S.sessId);S.tickId=S.sessId=null;S.running=false;
   beep('alarm');
   document.getElementById('missWarn').classList.remove('show');
   addLog('MISSED ✗','bad');updateStats();checkAchievements();
@@ -2001,7 +2001,10 @@ function handleMiss(){
   else{
     toast('❌ Missed! Restarting...','bad');
     setTimeout(()=>{S.remaining=S.intervalSec;S.warnFired=false;
-      S.running=true;S.tickId=setInterval(tick,1000);setStatus('ACTIVE','g');},1800);
+      S.running=true;
+      S.tickId=setInterval(tick,1000);
+      S.sessId=setInterval(()=>{if(!S.paused){S.elapsedSec++;S.subTime[S.currentSub]++;todayHeat();updateBreakdown();updateGoalBar();if(S.elapsedSec%30===0){saveState();autoSaveReport();}}},1000);
+      setStatus('ACTIVE','g');},1800);
   }
   saveState();
 }
@@ -2010,7 +2013,8 @@ function handleMiss(){
 // CHECK IN
 // ══════════════════════════════════════════
 function doCheckIn(e){
-  if(!S.running||S.paused){if(!S.running)startSess();return;}
+  if(!S.running){startSess();return;}
+  if(S.paused)return;
   const btn=document.getElementById('ciBtn');
   const rip=document.createElement('div');rip.className='btn-rip';
   rip.style.left=e.offsetX+'px';rip.style.top=e.offsetY+'px';
@@ -2108,7 +2112,9 @@ function checkLockMCQ(chosen,el){
     setTimeout(()=>{
       document.getElementById('lockScreen').classList.remove('active');
       S.remaining=S.intervalSec;S.warnFired=false;S.running=true;
-      S.tickId=setInterval(tick,1000);setStatus('ACTIVE','g');
+      S.tickId=setInterval(tick,1000);
+      S.sessId=setInterval(()=>{if(!S.paused){S.elapsedSec++;S.subTime[S.currentSub]++;todayHeat();updateBreakdown();updateGoalBar();if(S.elapsedSec%30===0){saveState();autoSaveReport();}}},1000);
+      setStatus('ACTIVE','g');
       addLog('Unlocked after miss','info');toast('🔓 Unlocked! Back to '+SUBS[S.currentSub].name+'!','ok');
     },600);
   } else {
@@ -2166,6 +2172,7 @@ function pomTick(){
 }
 
 function startPomBreak(){
+  clearInterval(S.pomBreakId);
   S.pomBreakSec=S.pomBreak*60;
   document.getElementById('pomCount').textContent=fmtS(S.pomBreakSec);
   document.getElementById('pomLock').classList.add('active');
@@ -2190,6 +2197,7 @@ function pomReset(){
   document.getElementById('pomDone').textContent='0';
   document.getElementById('pomFocusT').textContent='0m';
   document.getElementById('pomStreak').textContent='0';
+  saveState();
 }
 
 function updatePomDisplay(){
@@ -2419,6 +2427,9 @@ function adjAICount(d){
   document.getElementById('aiCountDisp').textContent=aiGenCount;
 }
 
+let _pendingAICards = null;
+let _pendingAICardsSub = null;
+
 async function generateAICards(){
   const topic=document.getElementById('aiGenTopic').value.trim();
   if(!topic){toast('Enter a topic first','bad');return;}
@@ -2427,7 +2438,7 @@ async function generateAICards(){
   document.getElementById('aiGenResult').innerHTML=
     '<div class="ai-bubble"><div class="ai-typing"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div></div>';
   try{
-    const subName={chem:'Chemistry',phys:'Physics',math:'Mathematics'}[aiGenSubKey];
+    const subName={chem:'Chemistry',phys:'Physics',math:'Mathematics'}[aiGenSubKey]||SUBS[aiGenSubKey]?.name||aiGenSubKey;
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -2447,15 +2458,17 @@ Make questions concise and answers clear and educational. Focus on exam-relevant
     catch(e){throw new Error('Could not parse AI response');}
     const cards=parsed.cards||[];
     if(!cards.length)throw new Error('No cards generated');
+    _pendingAICards = cards;
+    _pendingAICardsSub = aiGenSubKey;
     // Render preview
     document.getElementById('aiGenResult').innerHTML=`
       <div style="font-family:var(--mono);font-size:9px;color:var(--ai);letter-spacing:2px;margin-bottom:10px;text-transform:uppercase">✦ ${cards.length} cards generated</div>
-      ${cards.map((c,i)=>`
+      ${cards.map((c)=>`
       <div class="card-sm" style="border-color:rgba(192,132,252,.2)">
         <div style="font-size:11px;font-weight:700;margin-bottom:4px">${c.q}</div>
         <div style="font-family:var(--mono);font-size:10px;color:var(--chem)">${c.a}</div>
       </div>`).join('')}
-      <button class="ai-btn" style="width:100%;justify-content:center;margin-top:4px" onclick="saveAICards(${JSON.stringify(cards).replace(/"/g,'&quot;')},'${aiGenSubKey}')">💾 Save All to ${SUBS[aiGenSubKey].icon} ${SUBS[aiGenSubKey].name}</button>`;
+      <button class="ai-btn" style="width:100%;justify-content:center;margin-top:4px" onclick="saveAICards()">💾 Save All to ${SUBS[aiGenSubKey]?.icon||''} ${SUBS[aiGenSubKey]?.name||aiGenSubKey}</button>`;
     toast(`✦ ${cards.length} AI cards generated!`,'ai');
   }catch(err){
     document.getElementById('aiGenResult').innerHTML=`<div style="font-family:var(--mono);font-size:11px;color:var(--danger);padding:12px">Failed to generate cards. Check your connection.</div>`;
@@ -2464,13 +2477,15 @@ Make questions concise and answers clear and educational. Focus on exam-relevant
   btn.disabled=false;btn.textContent='✦ Generate';
 }
 
-function saveAICards(cardsJson,sub){
-  let cards;
-  try{cards=typeof cardsJson==='string'?JSON.parse(cardsJson.replace(/&quot;/g,'"')):cardsJson;}
-  catch(e){toast('Save error','bad');return;}
+function saveAICards(){
+  const cards = _pendingAICards;
+  const sub = _pendingAICardsSub;
+  if(!cards||!cards.length){toast('No cards to save','bad');return;}
+  if(!CUSTOM_CARDS[sub]) CUSTOM_CARDS[sub]=[];
   CUSTOM_CARDS[sub]=[...CUSTOM_CARDS[sub],...cards];
   lsSet(LS_CARDS,CUSTOM_CARDS);
-  toast(`✦ ${cards.length} AI cards saved to ${SUBS[sub].name}!`,'ai');
+  _pendingAICards=null;
+  toast(`✦ ${cards.length} AI cards saved to ${SUBS[sub]?.name||sub}!`,'ai');
 }
 
 // ══════════════════════════════════════════
@@ -2563,7 +2578,37 @@ async function runCoach(type,customQ){
 }
 
 // ══════════════════════════════════════════
-// PUSH NOTIFICATIONS (v5)
+// API KEY HELPERS
+// ══════════════════════════════════════════
+const API_KEY_LS = 'sg_anthropic_key';
+function getAPIKey(){return localStorage.getItem(API_KEY_LS)||'';}
+function saveAPIKey(){
+  const v=document.getElementById('apiKeyInp').value.trim();
+  if(!v||!v.startsWith('sk-')){toast('Invalid API key format','bad');return;}
+  localStorage.setItem(API_KEY_LS,v);
+  updateAPIKeyStatus();
+  closeAPIModal();
+  toast('✦ API key saved!','ai');
+}
+function openAPIModal(){
+  const modal=document.getElementById('apiKeyModal');
+  if(modal) modal.classList.add('active');
+  const inp=document.getElementById('apiKeyInp');
+  if(inp){const existing=getAPIKey();inp.value=existing||'';}
+}
+function closeAPIModal(){
+  const modal=document.getElementById('apiKeyModal');
+  if(modal) modal.classList.remove('active');
+}
+function updateAPIKeyStatus(){
+  const badge=document.getElementById('aiKeyStatusBadge');
+  if(!badge)return;
+  const key=getAPIKey();
+  badge.className='ai-key-status '+(key?'set':'unset');
+  badge.textContent=key?'✦ AI Active':'⚡ Set API Key';
+}
+
+
 // ══════════════════════════════════════════
 function checkNotifPermission(){
   if(!('Notification' in window))return;
@@ -2620,8 +2665,9 @@ function parseMarkdown(text){
     .replace(/\*(.+?)\*/g,'<em>$1</em>')
     .replace(/`(.+?)`/g,'<code>$1</code>')
     .replace(/^- (.+)$/gm,'<li>$1</li>')
-    .replace(/(<li>.*<\/li>)/gs,'<ul>$1</ul>')
     .replace(/\n/g,'<br>');
+  // Wrap consecutive <li> blocks in <ul>
+  h=h.replace(/(<li>[\s\S]*?<\/li>)(?:<br>(<li>[\s\S]*?<\/li>))*/g, m=>'<ul>'+m.replace(/<br>/g,'')+'</ul>');
   return h;
 }
 
@@ -2707,18 +2753,19 @@ function updateRing(){
 
 function updateTimerCard(){
   const card=document.getElementById('timerCard');
-  if(S.remaining<=60){
+  if(S.remaining<=60&&S.running){
     card.className='timer-card danger';
     document.getElementById('ringArc').style.stroke='var(--danger)';
     document.getElementById('tbar').style.background='var(--danger)';
     setStatus('DANGER','r');
-  } else if(S.remaining<=90){
+  } else if(S.remaining<=90&&S.running){
     card.className='timer-card warn';
     document.getElementById('ringArc').style.stroke='var(--warn)';
     document.getElementById('tbar').style.background='var(--warn)';
     setStatus('WARNING','y');
   } else {
-    card.className='timer-card';updateCIBtn();setStatus('ACTIVE','g');
+    card.className='timer-card';updateCIBtn();
+    if(S.running)setStatus(S.paused?'PAUSED':'ACTIVE',S.paused?'y':'g');
   }
 }
 
@@ -2782,7 +2829,8 @@ function updateGoalBar(){
   document.getElementById('elapsedM').textContent=Math.floor(S.elapsedSec/60)+' min elapsed';
   document.getElementById('goalM').textContent='goal: '+S.goalMin+' min';
   updateStats();
-  if(pct>=100)toast('🎉 Session goal reached!','ok');
+  if(pct>=100&&!S.goalToastFired){S.goalToastFired=true;toast('🎉 Session goal reached!','ok');}
+  if(pct<100)S.goalToastFired=false;
 }
 
 function adjGoal(d){
@@ -3226,6 +3274,7 @@ function drawBarChart(id,labels,datasets,stacked=false){
     datasets.forEach(ds=>{
       const v=ds.data[i]||0;
       const bh=(v/maxVal)*ch;
+      if(bh<1){if(stacked)stackY+=bh;return;}// skip zero-height bars
       const y=pad.t+ch-bh-stackY;
       ctx.fillStyle=ds.color;
       const r=4;
@@ -3429,6 +3478,7 @@ updatePomDisplay();
 startMidnightWatcher();
 checkNotifPermission();
 startRealtimeClock();
+updateAPIKeyStatus();
 
 document.getElementById('intCtrl').textContent=S.intervalOptions[S.intervalIdx]+'m';
 document.getElementById('intDisp').textContent=S.intervalOptions[S.intervalIdx]+' min';
@@ -3441,9 +3491,9 @@ setInterval(()=>{saveState();autoSaveReport();},60000);
 // ══════════════════════════════════════════
 // 24-HOUR TIMETABLE MODULE
 // ══════════════════════════════════════════
-const TT_KEY='studyguard_timetable_v1';
-const TT_NOTES_KEY='studyguard_tt_notes_v1';
-const TT_EXAM_KEY='studyguard_tt_exam_v1';
+const TT_KEY='sg_tt_timetable_v1';
+const TT_NOTES_KEY='sg_tt_notes_v1';
+const TT_EXAM_KEY='sg_tt_exam_v1';
 
 // Block types: id, label, color, productive?
 const TT_TYPES=[
@@ -3723,7 +3773,7 @@ function ttNextDay(){
   d.setDate(d.getDate()+1);
   const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   if(ds<=todayStr()) ttGoToDate(ds);
-  else toast('Cannot go to future dates','warn');
+  else toast('Cannot go to future dates','meh');
 }
 
 function ttSelectType(id, el){
@@ -3970,7 +4020,7 @@ function ttInit(){
 // ══════════════════════════════════════════
 // SUBJECT MANAGER
 // ══════════════════════════════════════════
-const LS_SUBS = 'studyguard_subjects';
+const LS_SUBS = 'studyguard_subs_v5';
 const SUB_COLORS = [
   'var(--chem)','var(--phys)','var(--math)','var(--info)','var(--ai)',
   'var(--warn)','#f472b6','#34d399','#fb923c','#60a5fa'
