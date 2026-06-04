@@ -4591,7 +4591,320 @@ injectSubjectCSS();
   subManagerOpen();
 })();
 
+
+<script>
+// ═══════════════════════════════════════════════════════
+// REWARD SYSTEM v8  —  runs at global scope, after main app
+// ═══════════════════════════════════════════════════════
+
+// ─── COINS ──────────────────────────────────────────────
+const LS_COINS = 'sg_coins_v8';
+const LS_DAILY = 'sg_daily_v8';
+const LS_SHOP  = 'sg_shop_v8';
+
+function getCoins(){ return parseInt(localStorage.getItem(LS_COINS)||'0'); }
+function setCoins(n){ localStorage.setItem(LS_COINS, n); updateCoinDisplay(); }
+function addCoins(n, x, y){
+  setCoins(getCoins()+n);
+  spawnPop('+'+n+' 🪙', 'coin', x, y);
+}
+
+function updateCoinDisplay(){
+  const c=getCoins();
+  const el=document.getElementById('coinBadge');
+  if(el) el.textContent=c;
+  const sc=document.getElementById('shopCoins');
+  if(sc) sc.textContent=c;
+}
+
+// ─── FLOATING POP LABELS ───────────────────────────────
+function spawnPop(text, cls, x, y){
+  const el=document.createElement('div');
+  el.className='xp-pop '+cls;
+  el.textContent=text;
+  el.style.left=(x!=null?x-20:Math.random()*160+100)+'px';
+  el.style.top =(y!=null?y-40:window.innerHeight/2-40)+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1700);
+}
+
+// ─── LEVEL-UP CHECK ────────────────────────────────────
+let _rwPrevLevel = Math.floor((S.xp||0)/100)+1;
+function rwCheckLevelUp(){
+  const lvl=Math.floor(S.xp/100)+1;
+  if(lvl > _rwPrevLevel){
+    _rwPrevLevel=lvl;
+    const titles=['','Beginner','Student','Scholar','Expert','Master','Legend'];
+    const t=titles[Math.min(lvl,titles.length-1)]||'Legend';
+    const bonus=lvl*50;
+    addCoins(bonus, window.innerWidth/2, window.innerHeight/2);
+    document.getElementById('lvuNum').textContent=lvl;
+    document.getElementById('lvuTitle').textContent=t;
+    document.getElementById('lvuReward').textContent='+'+bonus+' 🪙 Coins Earned!';
+    document.getElementById('lvlUpOverlay').classList.add('show');
+    beep('pomDone');
+  }
+}
+function dismissLvlUp(){
+  document.getElementById('lvlUpOverlay').classList.remove('show');
+}
+
+// ─── DAILY REWARD ──────────────────────────────────────
+const DAILY_REWARDS=[
+  {coins:50,  xp:20,  icon:'🎁', label:'Day 1 – Welcome bonus!'},
+  {coins:60,  xp:25,  icon:'📚', label:'Day 2 – Keep studying!'},
+  {coins:75,  xp:30,  icon:'🔥', label:'Day 3 – On fire!'},
+  {coins:80,  xp:35,  icon:'⚡', label:'Day 4 – Lightning streak!'},
+  {coins:100, xp:50,  icon:'💎', label:'Day 5 – Diamond reward!'},
+  {coins:110, xp:55,  icon:'🏆', label:'Day 6 – Trophy day!'},
+  {coins:200, xp:100, icon:'👑', label:'Day 7 – MEGA BONUS!'},
+];
+
+function getDailyData(){ try{return JSON.parse(localStorage.getItem(LS_DAILY)||'{}')}catch(e){return{}} }
+function setDailyData(d){ localStorage.setItem(LS_DAILY, JSON.stringify(d)); }
+
+function initDailyReward(){
+  const d=getDailyData();
+  const today=todayStr();
+  const banner=document.getElementById('dailyRewardBanner');
+  const btn=document.getElementById('drBtn');
+  const drTitle=document.getElementById('drTitle');
+  const drSub=document.getElementById('drSub');
+  const drIcon=document.getElementById('drIcon');
+  if(!banner)return;
+  let streak=d.streak||0;
+  const last=d.lastClaim;
+  if(last && last!==today){
+    const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1);
+    if(last!==yesterday.toISOString().slice(0,10)) streak=0;
+  }
+  const r=DAILY_REWARDS[Math.min(streak, DAILY_REWARDS.length-1)];
+  drIcon.textContent=r.icon;
+  drTitle.textContent=r.label;
+  drSub.textContent='Claim: +'+r.coins+' 🪙 · +'+r.xp+' XP';
+  if(d.lastClaim===today){
+    banner.classList.add('claimed');
+    if(btn) btn.disabled=true;
+    drTitle.textContent='Daily Reward Claimed ✓';
+    drSub.textContent='Come back tomorrow! Streak: '+streak+' days 🔥';
+  }
+}
+
+function claimDailyReward(){
+  const d=getDailyData();
+  const today=todayStr();
+  if(d.lastClaim===today){toast('Already claimed today!','meh');return;}
+  let streak=(d.streak||0);
+  const last=d.lastClaim;
+  if(last){
+    const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1);
+    if(last===yesterday.toISOString().slice(0,10)) streak++;
+    else streak=1;
+  } else { streak=1; }
+  streak=Math.min(streak,7);
+  setDailyData({lastClaim:today, streak});
+  const r=DAILY_REWARDS[Math.min(streak-1, DAILY_REWARDS.length-1)];
+  addCoins(r.coins, window.innerWidth/2, window.innerHeight/3);
+  S.xp+=r.xp; updateLevel(); updateStats(); saveState(); rwCheckLevelUp();
+  spawnPop('+'+r.xp+' XP','xp', window.innerWidth/2+40, window.innerHeight/3);
+  toast(r.icon+' Daily bonus! +'+r.coins+' 🪙 · +'+r.xp+' XP · Day '+streak,'ok');
+  beep('success');
+  const banner=document.getElementById('dailyRewardBanner');
+  const btn=document.getElementById('drBtn');
+  if(banner) banner.classList.add('claimed');
+  if(btn) btn.disabled=true;
+  document.getElementById('drTitle').textContent='Daily Reward Claimed ✓';
+  document.getElementById('drSub').textContent='Come back tomorrow! Streak: '+streak+' days 🔥';
+}
+
+// ─── REWARD SHOP ───────────────────────────────────────
+const SHOP_ITEMS=[
+  {id:'xp_boost',      icon:'⚡', name:'XP Booster',      desc:'Next session earns 2× XP on check-ins',      price:200},
+  {id:'skip_lock',     icon:'🔓', name:'Lock Skip Pass',  desc:'Skip the lock screen question once',          price:100},
+  {id:'streak_shield', icon:'🛡️', name:'Streak Shield',   desc:'Protect streak from 1 missed check-in',      price:250},
+  {id:'coin_magnet',   icon:'🧲', name:'Coin Magnet',     desc:'Earn +5 extra coins per check-in for 1 day', price:300},
+  {id:'pom_bonus',     icon:'🍅', name:'Pom Bonus',       desc:'Earn 60 coins per Pomodoro instead of 30',   price:150},
+  {id:'lvl_frame',     icon:'👑', name:'Crown Frame',     desc:'Golden glow on your level badge',             price:500},
+  {id:'big_daily',     icon:'💰', name:'Daily Doubler',   desc:'Double your next daily reward',               price:400},
+  {id:'theme_gold',    icon:'🌟', name:'Gold Theme',      desc:'Gold accent on your coin & level badges',     price:350},
+];
+
+function getShopOwned(){ try{return JSON.parse(localStorage.getItem(LS_SHOP)||'[]')}catch(e){return[]} }
+function setShopOwned(arr){ localStorage.setItem(LS_SHOP, JSON.stringify(arr)); }
+
+function renderShop(){
+  const el=document.getElementById('shopList');
+  if(!el)return;
+  const owned=getShopOwned();
+  el.innerHTML=SHOP_ITEMS.map(item=>{
+    const isOwned=owned.includes(item.id);
+    return '<div class="shop-item'+(isOwned?' owned':'')+'" onclick="buyShopItem(''+item.id+'')">'
+      +'<div class="shop-icon">'+item.icon+'</div>'
+      +'<div class="shop-info"><div class="shop-name">'+item.name+'</div>'
+      +'<div class="shop-desc">'+item.desc+'</div></div>'
+      +(isOwned
+        ?'<div style="font-family:var(--mono);font-size:9px;color:var(--success)">✓ OWNED</div>'
+        :'<div class="shop-price">'+item.price+' 🪙</div>')
+      +'</div>';
+  }).join('');
+  updateCoinDisplay();
+}
+
+function buyShopItem(id){
+  const owned=getShopOwned();
+  if(owned.includes(id)){toast('Already owned!','meh');return;}
+  const item=SHOP_ITEMS.find(i=>i.id===id);
+  if(!item)return;
+  const coins=getCoins();
+  if(coins<item.price){
+    toast('Need '+(item.price-coins)+' more 🪙 coins!','bad');
+    spawnPop('Need '+(item.price-coins)+' more 🪙','miss',window.innerWidth/2,window.innerHeight/2);
+    return;
+  }
+  setCoins(coins-item.price);
+  owned.push(id);
+  setShopOwned(owned);
+  toast(item.icon+' Bought: '+item.name+'!','ok');
+  beep('success');
+  spawnPop('-'+item.price+' 🪙','miss',window.innerWidth/2,window.innerHeight/2);
+  renderShop();
+  applyShopPerks();
+}
+
+function applyShopPerks(){
+  const owned=getShopOwned();
+  const lvlBadge=document.getElementById('levelBadge');
+  if(lvlBadge){
+    if(owned.includes('lvl_frame')) lvlBadge.style.textShadow='0 0 14px #ffc233';
+    if(owned.includes('theme_gold')) lvlBadge.style.color='#ffc233';
+  }
+  const coinEl=document.getElementById('coinBadge');
+  if(coinEl && owned.includes('theme_gold')) coinEl.style.textShadow='0 0 10px #ffc233';
+}
+
+// ─── COIN REWARDS ON ACTIONS ───────────────────────────
+function rwOnCheckIn(e){
+  const owned=getShopOwned();
+  let coins = owned.includes('coin_magnet') ? 15 : 10;
+  if(S.streak>0 && S.streak%5===0)  coins+=20;
+  if(S.streak>0 && S.streak%10===0) coins+=30;
+  const xpExtra = owned.includes('xp_boost') ? S.streak : 0;
+  if(xpExtra>0){ S.xp+=xpExtra; updateLevel(); spawnPop('+'+xpExtra+' XP','xp', e?e.clientX+30:null, e?e.clientY:null); }
+  addCoins(coins, e?e.clientX:null, e?e.clientY:null);
+  rwCheckLevelUp();
+}
+
+function rwOnPomDone(){
+  const owned=getShopOwned();
+  const coins = owned.includes('pom_bonus') ? 60 : 30;
+  addCoins(coins, window.innerWidth/2, window.innerHeight/3);
+  rwCheckLevelUp();
+}
+
+function rwOnFCEasy(){ addCoins(3, window.innerWidth/2, window.innerHeight/2); }
+
+function rwOnTodoDone(){ 
+  addCoins(5, window.innerWidth/2, window.innerHeight/2); 
+  spawnPop('+5 🪙','coin', window.innerWidth/2, window.innerHeight/2);
+}
+
+// ─── HOME POMODORO WIDGET ──────────────────────────────
+function homePomToggle(){
+  if(!S.pomRunning){
+    S.pomRunning=true;
+    document.getElementById('homePomBtn').textContent='⏸ Pause';
+    document.getElementById('homePomCard').classList.add('pom-active');
+    clearInterval(S.pomId);
+    S.pomId=setInterval(()=>{ pomTick(); updateHomePom(); },1000);
+    toast('🍅 Pomodoro started from home!','ok');
+  } else {
+    clearInterval(S.pomId); S.pomId=null;
+    S.pomRunning=false;
+    document.getElementById('homePomBtn').textContent='▶ Resume';
+    document.getElementById('homePomCard').classList.remove('pom-active');
+  }
+}
+
+function homePomReset(){
+  clearInterval(S.pomId); S.pomId=null;
+  S.pomRunning=false;
+  S.pomPhase='work'; S.pomSec=S.pomWork*60;
+  document.getElementById('homePomBtn').textContent='▶ Start';
+  document.getElementById('homePomCard').className='home-pom';
+  updateHomePom();
+  if(document.getElementById('pomDisplay'))
+    document.getElementById('pomDisplay').textContent=fmtS(S.pomWork*60);
+  saveState();
+}
+
+function updateHomePom(){
+  const timeEl=document.getElementById('homePomTime');
+  const arcEl=document.getElementById('homePomArc');
+  const phaseEl=document.getElementById('homePomPhase');
+  if(!timeEl) return;
+  timeEl.textContent=fmtS(S.pomSec);
+  const totalSec=(S.pomPhase==='work'?S.pomWork:S.pomBreak)*60;
+  const pct=S.pomSec/totalSec;
+  arcEl.style.strokeDashoffset=213*(1-pct);
+  arcEl.style.stroke=S.pomPhase==='work'?'var(--chem)':'var(--warn)';
+  phaseEl.textContent=S.pomPhase==='work'?'STUDY':'☕ BREAK';
+  phaseEl.style.color=S.pomPhase==='work'?'var(--chem)':'var(--warn)';
+  const sessEl=document.getElementById('hpSessions');
+  const strEl=document.getElementById('hpStreak');
+  const focEl=document.getElementById('hpFocus');
+  if(sessEl) sessEl.textContent=S.pomSessions;
+  if(strEl)  strEl.textContent=S.pomStreak;
+  if(focEl)  focEl.textContent=Math.floor(S.pomFocusSec/60)+'m';
+}
+
+// ─── PATCH ORIGINAL FUNCTIONS ──────────────────────────
+// Wrap doCheckIn
+(function(){
+  const orig=doCheckIn;
+  window.doCheckIn=function(e){ orig.call(this,e); rwOnCheckIn(e); };
+})();
+
+// Wrap pomTick to detect phase completion
+(function(){
+  const orig=pomTick;
+  let _lastPhase='work';
+  let _lastSessions=S.pomSessions||0;
+  window.pomTick=function(){
+    orig.call(this);
+    if(S.pomSessions > _lastSessions){ rwOnPomDone(); }
+    _lastSessions=S.pomSessions;
+    updateHomePom();
+  };
+})();
+
+// Wrap fcResult
+(function(){
+  const orig=fcResult;
+  window.fcResult=function(g){ orig.call(this,g); if(g==='easy') rwOnFCEasy(); };
+})();
+
+// Wrap toggleTodo
+(function(){
+  const orig=toggleTodo;
+  window.toggleTodo=function(id){
+    const wasDone=S.todos.find(x=>x.id===id)?.done;
+    orig.call(this,id);
+    const isDone=S.todos.find(x=>x.id===id)?.done;
+    if(!wasDone && isDone) rwOnTodoDone();
+  };
+})();
+
+// ─── INIT ──────────────────────────────────────────────
+(function rwInit(){
+  _rwPrevLevel=Math.floor((S.xp||0)/100)+1;
+  updateCoinDisplay();
+  initDailyReward();
+  renderShop();
+  applyShopPerks();
+  updateHomePom();
+})();
 </script>
+
 
 <!-- ═══════════════════════════════════════════════════════════════
      SUPABASE AUTH + CLOUD SYNC
