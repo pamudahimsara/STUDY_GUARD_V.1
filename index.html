@@ -4239,11 +4239,11 @@ injectSubjectCSS();
       // Restore timetable data from cloud
       if(cloud.ttdata)  {
         lsSet('studyguard_timetable_v1', cloud.ttdata);
-        if(typeof TT_DATA !== 'undefined') Object.assign(TT_DATA, cloud.ttdata);
+        if(typeof TT_DATA !== 'undefined'){ Object.keys(TT_DATA).forEach(k=>delete TT_DATA[k]); Object.assign(TT_DATA, cloud.ttdata); }
       }
       if(cloud.ttnotes) {
         lsSet('studyguard_tt_notes_v1', cloud.ttnotes);
-        if(typeof TT_NOTES_DATA !== 'undefined') Object.assign(TT_NOTES_DATA, cloud.ttnotes);
+        if(typeof TT_NOTES_DATA !== 'undefined'){ Object.keys(TT_NOTES_DATA).forEach(k=>delete TT_NOTES_DATA[k]); Object.assign(TT_NOTES_DATA, cloud.ttnotes); }
       }
       if(cloud.ttexam)  {
         lsSet('studyguard_tt_exam_v1', cloud.ttexam);
@@ -4327,7 +4327,7 @@ injectSubjectCSS();
     clearTimeout(window._syncDebounce);
     window._syncDebounce = setTimeout(()=>{
       if(currentUser && pendingSync) syncToCloud();
-    }, 5000);
+    }, 2000);
   };
 
   // ── ALSO PATCH lsSet TO CAPTURE MARKS/CARDS/SRS CHANGES ──────
@@ -4338,7 +4338,7 @@ injectSubjectCSS();
     clearTimeout(window._syncDebounce);
     window._syncDebounce = setTimeout(()=>{
       if(currentUser && pendingSync) syncToCloud();
-    }, 5000);
+    }, 2000);
   };
 
   // ── REFRESH UI AFTER LOADING CLOUD DATA ───────────────────────
@@ -4422,7 +4422,7 @@ injectSubjectCSS();
     const timeout = setTimeout(()=>{
       document.getElementById('authLoading').style.display = 'none';
       document.getElementById('authForms').style.display   = '';
-    }, 5000);
+    }, 2000);
 
     try{
       const {data, error} = await sb.auth.getSession();
@@ -4441,52 +4441,26 @@ injectSubjectCSS();
     }
   })();
 
-  // ── SYNC ON PAGE UNLOAD ────────────────────────────────────────
-  window.addEventListener('beforeunload', ()=>{
-    if(currentUser){
-      // Always beacon sync on unload (not just when pendingSync) so phone always saves timetable
-      const tt = {};
-      for(let i=0;i<localStorage.length;i++){
-        const k=localStorage.key(i);
-        if(k && k.startsWith('sg_tt_')){
-          try{ tt[k]=JSON.parse(localStorage.getItem(k)); }catch(e){}
-        }
-      }
-      const payload = JSON.stringify({
-        user_id: currentUser.id,
-        updated_at: new Date().toISOString(),
-        data:{
-          state:   lsGet(LS_KEY,{}),
-          marks:   lsGet(LS_MARKS,{}),
-          cards:   lsGet(LS_CARDS,{}),
-          srs:     lsGet(LS_SRS,{}),
-          reports: lsGet(LS_REPORTS,[]),
-          subs:    lsGet('studyguard_subs_v5', null),
-          tt,
-          ttdata:  lsGet('studyguard_timetable_v1', {}),
-          ttnotes: lsGet('studyguard_tt_notes_v1', {}),
-          ttexam:  lsGet('studyguard_tt_exam_v1', {date:'',name:'A/L Examination'}),
-          ttach:   JSON.parse(localStorage.getItem('studyguard_tt_ach')||'[]')
-        }
-      });
-      navigator.sendBeacon &&
-        navigator.sendBeacon(
-          SUPABASE_URL+'/rest/v1/user_data',
-          new Blob([payload],{type:'application/json'})
-        );
+  // ── SYNC ON VISIBILITY CHANGE ─────────────────────────────────
+  // On mobile, 'hidden' fires reliably before the tab is killed —
+  // this is the correct replacement for the broken sendBeacon approach
+  // (sendBeacon cannot send auth headers, so Supabase rejects it with 401).
+  document.addEventListener('visibilitychange', ()=>{
+    if(!currentUser) return;
+
+    if(document.visibilityState === 'hidden'){
+      // Tab going away — force immediate sync before page is killed
+      clearTimeout(window._syncDebounce);
+      clearTimeout(window._ttSyncDebounce);
+      syncToCloud();
+    }
+
+    if(document.visibilityState === 'visible'){
+      // Tab coming back — always pull latest so phone changes appear on computer
+      loadFromCloud().then(()=> setSyncStatus('synced','Synced'));
     }
   });
 
-  // ── SYNC ON VISIBILITY CHANGE (tab comes back / page refresh focus) ──
-  document.addEventListener('visibilitychange', ()=>{
-    if(document.visibilityState==='visible' && currentUser){
-      // Always pull latest from cloud when tab becomes visible
-      // This is what makes phone→computer sync work on refresh
-      loadFromCloud().then(()=> setSyncStatus('synced','Synced'));
-      // Also push any local pending changes
-      if(pendingSync) syncToCloud();
-    }
-  });
 
 })();
 </script>
