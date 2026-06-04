@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>StudyGuard Pro v5</title>
+<title>StudyGuard Pro v8</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -939,6 +939,129 @@ body::after{content:'';position:fixed;inset:0;
   transform:scale(1.016) rotateX(1.5deg)!important;
   box-shadow:0 12px 40px rgba(0,0,0,.35),0 0 24px rgba(167,139,250,.15)!important;
 }
+
+/* ═══════════════════════════════════════════════
+   REWARD SYSTEM — v8
+═══════════════════════════════════════════════ */
+
+/* XP / COIN POP-UP FLOATERS */
+.xp-pop{position:fixed;pointer-events:none;z-index:99999;
+  font-family:var(--mono);font-weight:800;font-size:16px;
+  text-shadow:0 0 12px currentColor;
+  animation:xpFloat 1.6s ease-out forwards}
+@keyframes xpFloat{
+  0%{opacity:1;transform:translateY(0) scale(1)}
+  60%{opacity:1;transform:translateY(-60px) scale(1.2)}
+  100%{opacity:0;transform:translateY(-100px) scale(.8)}
+}
+.xp-pop.xp{color:#a78bfa}
+.xp-pop.coin{color:#ffc233}
+.xp-pop.bonus{color:#00e5a0}
+.xp-pop.miss{color:#ff3d5a}
+
+/* COIN DISPLAY */
+.coin-badge{background:rgba(255,194,51,.12);border:1px solid rgba(255,194,51,.25);
+  border-radius:10px;padding:8px 12px;text-align:center;min-width:52px}
+.coin-v{font-family:var(--mono);font-size:18px;font-weight:800;color:var(--warn);line-height:1}
+.coin-l{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+/* DAILY REWARD BANNER */
+.daily-reward{background:linear-gradient(135deg,rgba(255,194,51,.12),rgba(167,139,250,.08));
+  border:1px solid rgba(255,194,51,.3);border-radius:16px;padding:14px 16px;
+  margin-bottom:14px;display:flex;align-items:center;gap:12px;cursor:pointer;
+  transition:all .3s;animation:rewardGlow 2s ease-in-out infinite alternate}
+@keyframes rewardGlow{
+  from{box-shadow:0 0 12px rgba(255,194,51,.15)}
+  to{box-shadow:0 0 28px rgba(255,194,51,.35)}
+}
+.daily-reward:hover{transform:scale(1.01)}
+.daily-reward.claimed{opacity:.4;cursor:default;animation:none;filter:grayscale(.6)}
+.dr-icon{font-size:32px;flex-shrink:0}
+.dr-text{flex:1}
+.dr-title{font-size:12px;font-weight:800;color:var(--warn)}
+.dr-sub{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:2px}
+.dr-btn{background:linear-gradient(135deg,var(--warn),#ff9500);color:#05050e;border:none;
+  border-radius:8px;padding:8px 16px;font-family:var(--font);font-size:11px;font-weight:800;
+  cursor:pointer;transition:transform .15s,box-shadow .2s;flex-shrink:0}
+.dr-btn:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(255,194,51,.4)}
+.dr-btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+
+/* HOME POMODORO WIDGET */
+.home-pom{background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:18px;margin-bottom:14px;position:relative;overflow:hidden;transition:border-color .3s}
+.home-pom.pom-active{border-color:var(--chem)}
+.home-pom.pom-break{border-color:var(--warn)}
+.home-pom::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 80% 50%,rgba(0,229,160,.04) 0%,transparent 70%);
+  pointer-events:none}
+.home-pom-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.home-pom-title{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+.home-pom-phase{font-family:var(--mono);font-size:9px;color:var(--chem);letter-spacing:1px}
+.home-pom-body{display:flex;align-items:center;gap:16px}
+.home-pom-ring{position:relative;width:80px;height:80px;flex-shrink:0}
+.home-pom-ring svg{width:80px;height:80px;transform:rotate(-90deg)}
+.hpr-bg{fill:none;stroke:var(--border);stroke-width:6}
+.hpr-arc{fill:none;stroke-width:6;stroke-linecap:round;stroke-dasharray:213;stroke-dashoffset:0;transition:stroke-dashoffset .8s linear,stroke .4s}
+.home-pom-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hpr-time{font-family:var(--mono);font-size:16px;font-weight:800;line-height:1}
+.hpr-lbl{font-size:7px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-top:1px}
+.home-pom-info{flex:1;display:flex;flex-direction:column;gap:6px}
+.home-pom-sessions{font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.7}
+.home-pom-sessions b{color:var(--text)}
+.home-pom-btns{display:flex;gap:6px;margin-top:8px}
+.hpb{flex:1;border:none;border-radius:8px;padding:8px;font-family:var(--font);font-size:11px;font-weight:800;cursor:pointer;transition:transform .15s}
+.hpb:hover{transform:scale(1.03)}
+.hpb.start{background:var(--chem);color:#05050e}
+.hpb.stop{background:var(--card2);border:1px solid var(--border);color:var(--muted)}
+.hpb.stop:hover{color:var(--danger);border-color:var(--danger)}
+
+/* LEVEL-UP OVERLAY */
+#lvlUpOverlay{position:fixed;inset:0;background:rgba(4,4,10,.92);z-index:99998;
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  backdrop-filter:blur(16px)}
+#lvlUpOverlay.show{display:flex;animation:lvlFadeIn .5s ease}
+@keyframes lvlFadeIn{from{opacity:0}to{opacity:1}}
+.lvu-glow{position:absolute;inset:0;background:
+  radial-gradient(ellipse 60% 50% at 50% 50%,rgba(167,139,250,.12) 0%,transparent 70%);
+  pointer-events:none}
+.lvu-num{font-family:var(--mono);font-size:80px;font-weight:800;
+  background:linear-gradient(135deg,var(--warn),var(--math));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:lvlBounce .6s cubic-bezier(.34,1.8,.64,1) .2s both}
+@keyframes lvlBounce{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.lvu-label{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase}
+.lvu-title{font-size:28px;font-weight:900;
+  background:linear-gradient(135deg,var(--chem),var(--math));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-top:-8px}
+.lvu-reward{font-family:var(--mono);font-size:13px;color:var(--warn);
+  background:rgba(255,194,51,.08);border:1px solid rgba(255,194,51,.2);
+  border-radius:10px;padding:8px 20px;margin-top:4px}
+.lvu-dismiss{background:var(--card2);border:1px solid var(--border);border-radius:12px;
+  padding:12px 32px;color:var(--muted);font-family:var(--font);font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .2s;margin-top:8px}
+.lvu-dismiss:hover{border-color:var(--text);color:var(--text)}
+
+/* REWARD SHOP */
+.shop-item{background:var(--card2);border:1px solid var(--border);border-radius:14px;
+  padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:all .25s;cursor:pointer}
+.shop-item:hover:not(.owned){border-color:var(--warn);transform:translateX(3px)}
+.shop-item.owned{opacity:.55;cursor:default;border-color:var(--success)}
+.shop-icon{font-size:26px;flex-shrink:0}
+.shop-info{flex:1}
+.shop-name{font-size:12px;font-weight:800}
+.shop-desc{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:2px}
+.shop-price{font-family:var(--mono);font-size:13px;font-weight:800;color:var(--warn);
+  background:rgba(255,194,51,.1);border:1px solid rgba(255,194,51,.2);
+  border-radius:8px;padding:4px 10px;flex-shrink:0}
+
+/* COMBO MULTIPLIER */
+.combo-badge{position:absolute;top:-6px;right:-6px;
+  background:linear-gradient(135deg,var(--warn),#ff9500);
+  color:#05050e;font-family:var(--mono);font-size:9px;font-weight:800;
+  padding:2px 6px;border-radius:8px;z-index:5;
+  animation:comboPop .3s cubic-bezier(.34,1.6,.64,1)}
+@keyframes comboPop{from{transform:scale(0)}to{transform:scale(1)}}
+
 </style>
 </head>
 <body>
@@ -1078,6 +1201,18 @@ body::after{content:'';position:fixed;inset:0;
   <button class="pom-skip" onclick="skipBreak()">Skip Break →</button>
 </div>
 
+
+<!-- LEVEL UP OVERLAY -->
+<div id="lvlUpOverlay">
+  <div class="lvu-glow"></div>
+  <div style="font-size:60px;animation:comboPop .5s cubic-bezier(.34,1.8,.64,1)">🏆</div>
+  <div class="lvu-label">LEVEL UP!</div>
+  <div class="lvu-num" id="lvuNum">2</div>
+  <div class="lvu-title" id="lvuTitle">Scholar</div>
+  <div class="lvu-reward" id="lvuReward">+100 🪙 Coins</div>
+  <button class="lvu-dismiss" onclick="dismissLvlUp()">Continue Studying →</button>
+</div>
+
 <!-- NAV -->
 <nav class="nav">
   <button class="nav-tab active" onclick="showPage('home',this)"><span class="nav-icon">⏱</span>Timer</button>
@@ -1095,11 +1230,12 @@ body::after{content:'';position:fixed;inset:0;
 <!-- PAGE: HOME -->
 <div class="page active" id="page-home">
   <div class="brand">
-    <div><div class="brand-name">Study<span>Guard</span> <span class="v5-badge">v5</span></div>
+    <div><div class="brand-name">Study<span>Guard</span> <span class="v5-badge">v8</span></div>
     <div class="brand-tag">// AI-powered focus enforcer · by AXIRON</div></div>
     <div class="badge-row">
       <div class="badge"><div class="badge-v" id="streakBadge" style="color:var(--warn)">0</div><div class="badge-l">🔥 streak</div></div>
       <div class="badge"><div class="badge-v" id="levelBadge" style="color:var(--math)">L1</div><div class="badge-l">level</div></div>
+      <div class="coin-badge"><div class="coin-v" id="coinBadge">0</div><div class="coin-l">🪙 coins</div></div>
     </div>
   </div>
   <div id="notifBanner" class="notif-banner" style="display:none">
@@ -1107,6 +1243,47 @@ body::after{content:'';position:fixed;inset:0;
     <span style="flex:1;font-family:var(--mono);font-size:10px">Enable notifications to get check-in alerts even when the tab is in the background.</span>
     <button onclick="requestNotifPermission()">Enable</button>
   </div>
+
+  <!-- DAILY REWARD BANNER -->
+  <div class="daily-reward" id="dailyRewardBanner" onclick="claimDailyReward()">
+    <div class="dr-icon" id="drIcon">🎁</div>
+    <div class="dr-text">
+      <div class="dr-title" id="drTitle">Daily Reward Available!</div>
+      <div class="dr-sub" id="drSub">Claim your login bonus to earn coins &amp; XP</div>
+    </div>
+    <button class="dr-btn" id="drBtn">CLAIM</button>
+  </div>
+
+  <!-- HOME POMODORO WIDGET -->
+  <div class="home-pom" id="homePomCard">
+    <div class="home-pom-header">
+      <div class="home-pom-title">// pomodoro</div>
+      <div class="home-pom-phase" id="homePomPhase">READY</div>
+    </div>
+    <div class="home-pom-body">
+      <div class="home-pom-ring">
+        <svg viewBox="0 0 80 80">
+          <circle class="hpr-bg" cx="40" cy="40" r="34"/>
+          <circle class="hpr-arc" id="homePomArc" cx="40" cy="40" r="34" stroke="var(--chem)"/>
+        </svg>
+        <div class="home-pom-center">
+          <div class="hpr-time" id="homePomTime">25:00</div>
+          <div class="hpr-lbl">left</div>
+        </div>
+      </div>
+      <div class="home-pom-info">
+        <div class="home-pom-sessions" id="homePomStats">
+          Sessions: <b id="hpSessions">0</b> · Streak: <b id="hpStreak">0</b><br>
+          Focus: <b id="hpFocus">0m</b> today
+        </div>
+        <div class="home-pom-btns">
+          <button class="hpb start" id="homePomBtn" onclick="homePomToggle()">▶ Start</button>
+          <button class="hpb stop" onclick="homePomReset()">↺</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <!-- REALTIME CLOCK -->
   <div class="rt-clock">
@@ -1292,6 +1469,14 @@ body::after{content:'';position:fixed;inset:0;
   <div class="card">
     <div class="sec-lbl">// achievements</div>
     <div class="ach-grid" id="achGrid"></div>
+  </div>
+  <div class="card">
+    <div class="sec-lbl">// 🪙 reward shop</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">Spend your coins on perks</div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:800;color:var(--warn)">🪙 <span id="shopCoins">0</span> coins</div>
+    </div>
+    <div id="shopList"></div>
   </div>
   <div class="card">
     <div class="sec-lbl">// export</div>
@@ -1701,19 +1886,20 @@ body::after{content:'';position:fixed;inset:0;
   <div class="card">
     <div class="sec-lbl">// about</div>
     <div style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.8">
-      StudyGuard Pro v5.0 🆕<br>
+      StudyGuard Pro v8.0 🆕<br>
       Built for: Chemistry · Physics · Combined Maths<br>
-      New in v5: AI Flashcards · Spaced Repetition · AI Coach<br>
+      New in v8: Reward System · Coins · Daily Login Bonus · Spaced Repetition · AI Coach<br>
       Custom Cards · Markdown Notes · Priority Todos<br>
       Grade Bands · Push Notifications · 70-day Heatmap<br>
       MCQ Lock Screen · Subject Todo Tags · Subject Manager<br>
-      Project By AXIRON 2026
+      Reward Shop · Home Pomodoro · Level-Up Animations
+Project By AXIRON 2026
     </div>
   </div>
 </div>
 
 <!-- FOOTER -->
-<div class="sg-footer">Designed for excellence by <span>AXIRON</span> · 2026</div>
+<div class="sg-footer">StudyGuard v8 · Designed for excellence by <span>AXIRON</span> · 2026</div>
 
 <!-- PAGE: TIMETABLE -->
 <div class="page" id="page-timetable">
@@ -5001,6 +5187,345 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 })();
+
+
+// ═══════════════════════════════════════════════════════
+// REWARD SYSTEM v8
+// ═══════════════════════════════════════════════════════
+
+// ─── COINS ──────────────────────────────────────────────
+const LS_COINS = 'sg_coins_v8';
+const LS_DAILY = 'sg_daily_v8';
+const LS_SHOP  = 'sg_shop_v8';
+
+function getCoins(){ return parseInt(localStorage.getItem(LS_COINS)||'0'); }
+function setCoins(n){ localStorage.setItem(LS_COINS, n); updateCoinDisplay(); }
+function addCoins(n, label, x, y){
+  setCoins(getCoins()+n);
+  spawnPop('+'+n+'🪙', 'coin', x, y);
+}
+
+function updateCoinDisplay(){
+  const c=getCoins();
+  const el=document.getElementById('coinBadge');
+  if(el) el.textContent=c;
+  const sc=document.getElementById('shopCoins');
+  if(sc) sc.textContent=c;
+}
+
+// ─── XP FLOAT POPS ─────────────────────────────────────
+function spawnPop(text, cls, x, y){
+  const el=document.createElement('div');
+  el.className='xp-pop '+cls;
+  el.textContent=text;
+  if(x!=null) el.style.left=(x-20)+'px';
+  else el.style.left=(Math.random()*200+100)+'px';
+  if(y!=null) el.style.top=(y-40)+'px';
+  else el.style.top=(window.innerHeight/2)+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1700);
+}
+
+// ─── LEVEL UP ──────────────────────────────────────────
+let _prevLevel=1;
+function checkLevelUp(){
+  const lvl=Math.floor(S.xp/100)+1;
+  if(lvl>_prevLevel){
+    _prevLevel=lvl;
+    const titles=['','Beginner','Student','Scholar','Expert','Master','Legend'];
+    const t=titles[Math.min(lvl,titles.length-1)]||'Legend';
+    const bonus=lvl*50;
+    addCoins(bonus, null, window.innerWidth/2, window.innerHeight/2);
+    document.getElementById('lvuNum').textContent=lvl;
+    document.getElementById('lvuTitle').textContent=t;
+    document.getElementById('lvuReward').textContent='+'+bonus+' 🪙 Coins Earned!';
+    document.getElementById('lvlUpOverlay').classList.add('show');
+    beep('pomDone');
+    S.achUnlocked.push('lvlup_'+lvl);
+  }
+}
+function dismissLvlUp(){
+  document.getElementById('lvlUpOverlay').classList.remove('show');
+}
+
+// ─── DAILY REWARD ──────────────────────────────────────
+const DAILY_REWARDS=[
+  {day:1, coins:50,  xp:20,  icon:'🎁', label:'Day 1 – Welcome!'},
+  {day:2, coins:60,  xp:25,  icon:'📚', label:'Day 2 – Keep studying!'},
+  {day:3, coins:75,  xp:30,  icon:'🔥', label:'Day 3 – On fire!'},
+  {day:4, coins:80,  xp:35,  icon:'⚡', label:'Day 4 – Lightning streak!'},
+  {day:5, coins:100, xp:50,  icon:'💎', label:'Day 5 – Diamond reward!'},
+  {day:6, coins:110, xp:55,  icon:'🏆', label:'Day 6 – Trophy day!'},
+  {day:7, coins:200, xp:100, icon:'👑', label:'Day 7 – MEGA BONUS!'},
+];
+
+function getDailyData(){ return JSON.parse(localStorage.getItem(LS_DAILY)||'{}'); }
+function setDailyData(d){ localStorage.setItem(LS_DAILY, JSON.stringify(d)); }
+
+function initDailyReward(){
+  const d=getDailyData();
+  const today=todayStr();
+  const banner=document.getElementById('dailyRewardBanner');
+  const btn=document.getElementById('drBtn');
+  const drTitle=document.getElementById('drTitle');
+  const drSub=document.getElementById('drSub');
+  const drIcon=document.getElementById('drIcon');
+  if(!banner)return;
+
+  // Calculate streak
+  let streak=d.streak||0;
+  const last=d.lastClaim;
+  if(last){
+    const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1);
+    const yStr=yesterday.toISOString().slice(0,10);
+    if(last!==today && last!==yStr){ streak=0; } // broke streak
+  }
+
+  const dayIdx=Math.min(streak, DAILY_REWARDS.length-1);
+  const reward=DAILY_REWARDS[dayIdx];
+  drIcon.textContent=reward.icon;
+  drTitle.textContent=reward.label;
+  drSub.textContent='Claim: +'+reward.coins+' 🪙 coins · +'+reward.xp+' XP';
+
+  if(d.lastClaim===today){
+    banner.classList.add('claimed');
+    btn.disabled=true;
+    drTitle.textContent='Daily Reward Claimed ✓';
+    drSub.textContent='Come back tomorrow for more rewards! Streak: '+streak+' days';
+  }
+}
+
+function claimDailyReward(){
+  const d=getDailyData();
+  const today=todayStr();
+  if(d.lastClaim===today) return;
+
+  let streak=(d.streak||0);
+  const last=d.lastClaim;
+  if(last){
+    const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1);
+    if(last===yesterday.toISOString().slice(0,10)) streak++;
+    else if(last!==today) streak=1;
+    else streak++;
+  } else { streak=1; }
+  streak=Math.min(streak,7);
+
+  const dayIdx=Math.min(streak-1, DAILY_REWARDS.length-1);
+  const reward=DAILY_REWARDS[dayIdx];
+  setDailyData({lastClaim:today, streak});
+
+  addCoins(reward.coins, null, window.innerWidth/2, window.innerHeight/3);
+  S.xp+=reward.xp; updateLevel(); updateStats(); checkLevelUp();
+  spawnPop('+'+reward.xp+' XP', 'xp', window.innerWidth/2+30, window.innerHeight/3);
+  toast(reward.icon+' Daily reward! +'+reward.coins+' coins · +'+reward.xp+' XP · Day '+streak,'ok');
+  beep('success');
+
+  const banner=document.getElementById('dailyRewardBanner');
+  const btn=document.getElementById('drBtn');
+  const drTitle=document.getElementById('drTitle');
+  const drSub=document.getElementById('drSub');
+  if(banner){ banner.classList.add('claimed'); }
+  if(btn){ btn.disabled=true; }
+  if(drTitle){ drTitle.textContent='Daily Reward Claimed ✓'; }
+  if(drSub){ drSub.textContent='Come back tomorrow! Streak: '+streak+' days'; }
+  saveState();
+}
+
+// ─── SHOP ──────────────────────────────────────────────
+const SHOP_ITEMS=[
+  {id:'theme_gold',    icon:'🌟', name:'Gold Theme',      desc:'Unlock a golden glow for your level badge',   price:150},
+  {id:'extra_xp',     icon:'⚡', name:'XP Booster',       desc:'Next 10 check-ins earn 2× XP (one session)',  price:200},
+  {id:'skip_lock',    icon:'🔓', name:'Lock Skip Pass',   desc:'Skip the next lock screen question once',     price:100},
+  {id:'pom_theme',    icon:'🍅', name:'Pom Party Mode',   desc:'Unlocks fun emojis for Pomodoro phases',      price:120},
+  {id:'streak_shield',icon:'🛡️', name:'Streak Shield',    desc:'Protect streak from 1 missed check-in',      price:250},
+  {id:'coin_magnet',  icon:'🧲', name:'Coin Magnet',      desc:'Earn +5 coins per check-in for 1 day',       price:300},
+  {id:'lvl_frame',    icon:'👑', name:'Crown Frame',      desc:'Show a crown on your level badge',            price:500},
+  {id:'big_daily',    icon:'💰', name:'Daily Doubler',    desc:'Double tomorrow's daily reward',             price:400},
+];
+
+function getShopOwned(){ return JSON.parse(localStorage.getItem(LS_SHOP)||'[]'); }
+function setShopOwned(arr){ localStorage.setItem(LS_SHOP, JSON.stringify(arr)); }
+
+function renderShop(){
+  const el=document.getElementById('shopList');
+  if(!el)return;
+  const owned=getShopOwned();
+  el.innerHTML=SHOP_ITEMS.map(item=>`
+    <div class="shop-item${owned.includes(item.id)?' owned':''}" onclick="buyShopItem('${item.id}')">
+      <div class="shop-icon">${item.icon}</div>
+      <div class="shop-info">
+        <div class="shop-name">${item.name}</div>
+        <div class="shop-desc">${item.desc}</div>
+      </div>
+      ${owned.includes(item.id)
+        ? '<div style="font-family:var(--mono);font-size:9px;color:var(--success);letter-spacing:1px">✓ OWNED</div>'
+        : '<div class="shop-price">'+item.price+' 🪙</div>'}
+    </div>`).join('');
+}
+
+function buyShopItem(id){
+  const owned=getShopOwned();
+  if(owned.includes(id)){toast('Already owned!','meh');return;}
+  const item=SHOP_ITEMS.find(i=>i.id===id);
+  if(!item)return;
+  const coins=getCoins();
+  if(coins<item.price){toast('Not enough coins! Need '+(item.price-coins)+' more 🪙','bad');return;}
+  setCoins(coins-item.price);
+  owned.push(id);
+  setShopOwned(owned);
+  toast(item.icon+' Purchased: '+item.name+'!','ok');
+  beep('success');
+  spawnPop('-'+item.price+'🪙','miss',window.innerWidth/2,window.innerHeight/2);
+  renderShop();
+  applyShopPerks();
+}
+
+function applyShopPerks(){
+  const owned=getShopOwned();
+  const lvlBadge=document.getElementById('levelBadge');
+  if(lvlBadge){
+    if(owned.includes('lvl_frame')) lvlBadge.style.textShadow='0 0 12px var(--warn)';
+    if(owned.includes('theme_gold')) lvlBadge.style.color='#ffc233';
+  }
+}
+
+// ─── REWARD HOOK: patch check-in to give coins ─────────
+const _origCheckIn=window.doCheckIn;
+// We patch later via override below after script loads
+function rewardOnCheckIn(e){
+  // Coins per check-in
+  const owned=getShopOwned();
+  let coinGain = owned.includes('coin_magnet') ? 15 : 10;
+  // Streak bonus
+  if(S.streak>0 && S.streak%5===0) coinGain+=20;
+  if(S.streak>0 && S.streak%10===0) coinGain+=30;
+  addCoins(coinGain, null, e?e.clientX:null, e?e.clientY:null);
+
+  // XP booster doubles XP pop
+  if(owned.includes('extra_xp')){
+    spawnPop('×2 XP!','bonus', e?e.clientX+30:null, e?e.clientY:null);
+  }
+  checkLevelUp();
+}
+
+// Reward on Pomodoro complete
+function rewardOnPomDone(){
+  addCoins(30, null, window.innerWidth/2, window.innerHeight/4);
+  spawnPop('+30🪙','coin', window.innerWidth/2, window.innerHeight/4);
+  checkLevelUp();
+}
+
+// Reward on flashcard easy
+function rewardOnFCEasy(){
+  addCoins(3, null, window.innerWidth/2, window.innerHeight/2);
+}
+
+// Reward on todo complete
+function rewardOnTodoDone(){
+  addCoins(5, null, window.innerWidth/2, window.innerHeight/2);
+  spawnPop('+5🪙','coin', window.innerWidth/2, window.innerHeight/2);
+}
+
+// ─── HOME POMODORO WIDGET ──────────────────────────────
+// Shares the same S.pom* state as the main pom page
+function homePomToggle(){
+  if(!S.pomRunning){
+    // Start or resume
+    S.pomRunning=true;
+    document.getElementById('homePomBtn').textContent='⏸ Pause';
+    document.getElementById('homePomCard').className='home-pom pom-active';
+    if(!S.pomId){
+      S.pomId=setInterval(()=>{
+        pomTick();
+        updateHomePom();
+      },1000);
+    }
+  } else {
+    // Pause
+    clearInterval(S.pomId); S.pomId=null;
+    S.pomRunning=false;
+    document.getElementById('homePomBtn').textContent='▶ Resume';
+  }
+}
+
+function homePomReset(){
+  clearInterval(S.pomId); S.pomId=null;
+  S.pomRunning=false;
+  S.pomPhase='work'; S.pomSec=S.pomWork*60;
+  document.getElementById('homePomBtn').textContent='▶ Start';
+  document.getElementById('homePomCard').className='home-pom';
+  updateHomePom();
+  // also sync main pom page
+  if(document.getElementById('pomDisplay'))
+    document.getElementById('pomDisplay').textContent=fmtS(S.pomWork*60);
+}
+
+function updateHomePom(){
+  const timeEl=document.getElementById('homePomTime');
+  const arcEl=document.getElementById('homePomArc');
+  const phaseEl=document.getElementById('homePomPhase');
+  const sessEl=document.getElementById('hpSessions');
+  const strEl=document.getElementById('hpStreak');
+  const focEl=document.getElementById('hpFocus');
+  if(!timeEl) return;
+  timeEl.textContent=fmtS(S.pomSec);
+  const total=(S.pomPhase==='work'?S.pomWork:S.pomBreak)*60;
+  const pct=S.pomSec/total;
+  const circ=213;
+  arcEl.style.strokeDashoffset=circ*(1-pct);
+  arcEl.style.stroke=S.pomPhase==='work'?'var(--chem)':'var(--warn)';
+  phaseEl.textContent=S.pomPhase==='work'?'STUDY':'☕ BREAK';
+  phaseEl.style.color=S.pomPhase==='work'?'var(--chem)':'var(--warn)';
+  document.getElementById('homePomCard').className='home-pom'+(S.pomRunning?(S.pomPhase==='work'?' pom-active':' pom-break'):'');
+  if(sessEl) sessEl.textContent=S.pomSessions;
+  if(strEl) strEl.textContent=S.pomStreak;
+  if(focEl) focEl.textContent=Math.floor(S.pomFocusSec/60)+'m';
+}
+
+// ─── PATCH EXISTING FUNCTIONS ─────────────────────────
+// Patch doCheckIn
+const _orig_doCheckIn=doCheckIn;
+window.doCheckIn=function(e){
+  _orig_doCheckIn.call(this,e);
+  rewardOnCheckIn(e);
+};
+
+// Patch pomTick to reward on pom done
+const _orig_pomTick=pomTick;
+window.pomTick=function(){
+  const wasWork=S.pomPhase==='work';
+  const prevSec=S.pomSec;
+  _orig_pomTick.call(this);
+  if(wasWork && prevSec<=1 && S.pomSessions>0){ rewardOnPomDone(); }
+  updateHomePom();
+};
+
+// Patch fcResult to reward on easy
+const _orig_fcResult=fcResult;
+window.fcResult=function(g){
+  _orig_fcResult.call(this,g);
+  if(g==='easy') rewardOnFCEasy();
+};
+
+// Patch toggleTodo to reward on completion
+const _orig_toggleTodo=toggleTodo;
+window.toggleTodo=function(id){
+  const wasDone=S.todos.find(x=>x.id===id)?.done;
+  _orig_toggleTodo.call(this,id);
+  const isDone=S.todos.find(x=>x.id===id)?.done;
+  if(!wasDone && isDone) rewardOnTodoDone();
+};
+
+// ─── INIT ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  _prevLevel=Math.floor(S.xp/100)+1;
+  updateCoinDisplay();
+  initDailyReward();
+  renderShop();
+  applyShopPerks();
+  updateHomePom();
+});
+
 </script>
 
 <!-- ═══ 3D & SPOTLIGHT ANIMATIONS ══════════════════════════════════ -->
