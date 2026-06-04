@@ -734,17 +734,6 @@ body::after{content:'';position:fixed;inset:0;
 .sync-dot.synced{background:var(--success)}
 .sync-dot.syncing{background:var(--warn);animation:blink .6s infinite}
 .sync-dot.offline{background:var(--muted)}
-
-/* GLOBAL ANIMATION PACK */
-.reveal{opacity:0;transform:translateY(30px);transition:all .7s ease}
-.reveal.visible{opacity:1;transform:none}
-.card,.card-sm,.stat-tile,.ach-item,.fc-card,.report-card{
- animation:fadeUp .6s ease both;
-}
-@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-.page.active{animation:pageZoom .45s ease}
-@keyframes pageZoom{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
-
 </style>
 </head>
 <body>
@@ -3826,29 +3815,7 @@ function ttPrintDay(){
   <p>Study: ${stats.studyHours}h | Sleep: ${stats.sleepHours}h | Wasted: ${stats.wasteHours}h | Productive: ${stats.productivePct}%</p>
   <table>${rows}</table>
   <div style="margin-top:16px;font-size:12px;color:#888">Printed from StudyGuard Pro · ${new Date().toLocaleString()}</div>
-  
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
- const obs=new IntersectionObserver(es=>{
-  es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
- },{threshold:.1});
- document.querySelectorAll('.card,.card-sm,.stat-tile,.ach-item,.fc-card,.report-card').forEach(el=>{
-   el.classList.add('reveal');obs.observe(el);
- });
- for(let i=0;i<25;i++){
-   const p=document.createElement('div');
-   p.className='particle';
-   p.style.left=Math.random()*100+'vw';
-   p.style.width=p.style.height=(2+Math.random()*5)+'px';
-   p.style.background='rgba(255,255,255,.25)';
-   p.style.animationDuration=(10+Math.random()*20)+'s';
-   p.style.animationDelay=(Math.random()*10)+'s';
-   document.body.appendChild(p);
- }
-});
-</script>
-
-</body></html>`);
+  </body></html>`);
   win.document.close();
   win.print();
 }
@@ -4211,7 +4178,7 @@ function renderTodoFilters(keys){
   if(!container) return;
   const filterRow = container.querySelector('[id^="todoF_all"]')?.parentElement;
   if(!filterRow) return;
-  filterRow.innerHTML = `<button onclick="filterTodos('all')" id="todoF_all_2" class="ctrl-btn go" style="flex:none;padding:5px 10px;font-size:10px">All</button>`
+  filterRow.innerHTML = `<button onclick="filterTodos('all')" id="todoF_all" class="ctrl-btn go" style="flex:none;padding:5px 10px;font-size:10px">All</button>`
     + keys.map(k=>`<button onclick="filterTodos('${k}')" id="todoF_${k}" class="ctrl-btn" style="flex:none;padding:5px 10px;font-size:10px;color:${SUBS[k].color}">${SUBS[k].icon} ${SUBS[k].name.slice(0,5)}</button>`).join('');
 }
 
