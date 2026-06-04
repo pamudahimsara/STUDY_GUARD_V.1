@@ -2,183 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AL 45-Day Revision Planner + StudyGuard</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;700;800&family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>StudyGuard Pro v5</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
-/* ═══════════════════════ PLANNER STYLES ═══════════════════════ */
-:root {
-  --bg: #080c10;
-  --surface: #0e1419;
-  --card: #111820;
-  --border: #1e2a35;
-  --border-lit: #2e3e4e;
-  --phy: #00e5ff;
-  --phy-dim: rgba(0,229,255,0.07);
-  --che: #ff5733;
-  --che-dim: rgba(255,87,51,0.07);
-  --mat: #a3e635;
-  --mat-dim: rgba(163,230,53,0.07);
-  --text: #dce8f0;
-  --muted: #4a6070;
-  --done-col: #22c55e;
-  --today-col: #fbbf24;
-  --high: #ef4444;
-  --med: #f59e0b;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5;}
-.wrap{max-width:1120px;margin:0 auto;padding:2.5rem 1.5rem 5rem;position:relative;z-index:1;}
-header{margin-bottom:2.5rem;padding-bottom:2rem;border-bottom:1px solid var(--border);}
-.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1.5rem;flex-wrap:wrap;}
-.title-block h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.8rem,8vw,5rem);letter-spacing:0.06em;line-height:0.9;color:#fff;}
-.title-block h1 em{color:var(--today-col);font-style:normal;}
-.title-block p{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--muted);margin-top:0.6rem;letter-spacing:0.08em;}
-.ring-area{display:flex;flex-direction:column;align-items:center;gap:0.4rem;flex-shrink:0;}
-.ring-area svg{width:80px;height:80px;}
-.ring-pct{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);}
-.sync-status{font-family:'Space Mono',monospace;font-size:0.6rem;padding:0.2rem 0.6rem;border-radius:4px;display:inline-flex;align-items:center;gap:0.4rem;margin-top:0.4rem;}
-.sync-ok{background:rgba(34,197,94,0.12);color:#22c55e;border:1px solid rgba(34,197,94,0.2);}
-.sync-loading{background:rgba(251,191,36,0.12);color:#fbbf24;border:1px solid rgba(251,191,36,0.2);}
-.sync-dot-anim{width:5px;height:5px;border-radius:50%;background:currentColor;animation:pulse 1.2s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.stats{display:flex;gap:0;margin-bottom:2rem;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-.stat{flex:1;padding:1rem 1.2rem;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:0.2rem;min-width:80px;}
-.stat:last-child{border-right:none;}
-.stat-v{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.05em;line-height:1;}
-.stat-l{font-family:'Space Mono',monospace;font-size:0.58rem;color:var(--muted);letter-spacing:0.05em;}
-.sv-gold{color:var(--today-col);}
-.sv-green{color:var(--done-col);}
-.sv-blue{color:var(--phy);}
-.legend{display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;}
-.li{display:flex;align-items:center;gap:0.45rem;font-size:0.75rem;font-family:'Space Mono',monospace;}
-.dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
-.dp{background:var(--phy);}
-.dc{background:var(--che);}
-.dm{background:var(--mat);}
-.pri{font-size:0.55rem;font-family:'Space Mono',monospace;padding:0.1rem 0.4rem;border-radius:3px;font-weight:700;}
-.pri-h{background:var(--high);color:#fff;}
-.pri-m{background:var(--med);color:#000;}
-.filters{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:2rem;}
-.fb{background:transparent;border:1px solid var(--border);color:var(--muted);padding:0.3rem 0.85rem;border-radius:4px;font-family:'Space Mono',monospace;font-size:0.65rem;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em;}
-.fb:hover{border-color:var(--border-lit);color:var(--text);}
-.fb.active{color:#000;font-weight:700;border-color:transparent;}
-.fb.fall.active{background:var(--text);color:#000;}
-.fb.fph.active{background:var(--phy);}
-.fb.fch.active{background:var(--che);}
-.fb.fma.active{background:var(--mat);}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:0.75rem;}
-.day-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.1rem;transition:border-color 0.2s,transform 0.2s;cursor:default;position:relative;overflow:hidden;}
-.day-card:hover{border-color:var(--border-lit);transform:translateY(-2px);}
-.day-card.today-card{border-color:var(--today-col);box-shadow:0 0 20px rgba(251,191,36,0.1);}
-.day-card.done-card{opacity:0.5;}
-.day-card.done-card .cbtn{background:var(--done-col);border-color:var(--done-col);color:#fff;}
-.day-card.rev-card{border-color:rgba(251,191,36,0.25);}
-.day-card.final-card{border-color:rgba(163,230,53,0.4);box-shadow:0 0 30px rgba(163,230,53,0.08);}
-.card-accent{position:absolute;top:0;left:0;right:0;height:2px;}
-.acc-normal{background:linear-gradient(90deg,var(--phy),var(--mat));}
-.acc-rev{background:var(--today-col);}
-.acc-final{background:linear-gradient(90deg,var(--mat),#fbbf24,var(--phy));}
-.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;}
-.day-lbl{font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--muted);letter-spacing:0.1em;display:flex;align-items:center;gap:0.5rem;}
-.rev-tag{font-size:0.55rem;background:rgba(251,191,36,0.15);color:var(--today-col);padding:0.1rem 0.4rem;border-radius:3px;letter-spacing:0.05em;}
-.final-tag{font-size:0.55rem;background:rgba(163,230,53,0.15);color:var(--mat);padding:0.1rem 0.4rem;border-radius:3px;letter-spacing:0.05em;}
-.today-badge{font-size:0.55rem;background:var(--today-col);color:#000;padding:0.12rem 0.45rem;border-radius:3px;font-weight:700;font-family:'Space Mono',monospace;}
-.head-right{display:flex;align-items:center;gap:0.5rem;}
-.cbtn{width:20px;height:20px;border-radius:4px;border:1.5px solid var(--border-lit);background:transparent;cursor:pointer;font-size:0.65rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;color:transparent;}
-.cbtn:hover{border-color:var(--done-col);color:var(--done-col);}
-.topics{display:flex;flex-direction:column;gap:0.35rem;}
-.tr{display:flex;align-items:flex-start;gap:0.5rem;padding:0.4rem 0.6rem;border-radius:6px;font-size:0.76rem;line-height:1.4;}
-.tr.ph{background:var(--phy-dim);}
-.tr.ch{background:var(--che-dim);}
-.tr.ma{background:var(--mat-dim);}
-.tlbl{font-family:'Space Mono',monospace;font-size:0.58rem;font-weight:700;padding:0.07rem 0.35rem;border-radius:3px;flex-shrink:0;margin-top:0.1rem;}
-.tr.ph .tlbl{background:var(--phy);color:#000;}
-.tr.ch .tlbl{background:var(--che);color:#fff;}
-.tr.ma .tlbl{background:var(--mat);color:#000;}
-.topic-text{flex:1;}
-.open-app-btn{margin-top:0.75rem;width:100%;padding:0.6rem;border:1px solid var(--mat);background:rgba(163,230,53,0.08);color:var(--mat);font-family:'Space Mono',monospace;font-size:0.65rem;font-weight:700;border-radius:6px;cursor:pointer;letter-spacing:0.08em;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:0.5rem;}
-.open-app-btn:hover{background:rgba(163,230,53,0.18);border-color:#a3e635;transform:scale(1.01);}
-.hidden{display:none!important;}
-/* Loading overlay */
-#loadingOverlay{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
-#loadingOverlay h2{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.1em;color:var(--today-col);}
-#loadingOverlay p{font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--muted);}
-.load-bar{width:200px;height:2px;background:var(--border);border-radius:99px;overflow:hidden;}
-.load-fill{height:100%;background:linear-gradient(90deg,var(--phy),var(--mat));border-radius:99px;animation:loadAnim 1.5s ease-in-out infinite;}
-@keyframes loadAnim{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
-</style>
-
-<style>
-/* ═══════════════════════ STUDYGUARD OVERLAY STYLES ═══════════════════════ */
-#sgOverlay {
-  position:fixed;inset:0;z-index:10000;
-  background:#07070f;
-  display:none;
-  flex-direction:column;
-  overflow:hidden;
-}
-#sgOverlay.active {
-  display:flex;
-}
-#sgBackBtn {
-  position:fixed;
-  top:0;left:0;right:0;
-  z-index:10100;
-  background:rgba(7,7,15,0.95);
-  backdrop-filter:blur(12px);
-  border-bottom:1px solid #22223a;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:10px 16px;
-}
-#sgBackBtn button {
-  background:transparent;
-  border:1px solid #22223a;
-  border-radius:8px;
-  color:#eeeeff;
-  padding:7px 14px;
-  font-family:'JetBrains Mono',monospace;
-  font-size:11px;
-  font-weight:700;
-  cursor:pointer;
-  letter-spacing:1px;
-  transition:all 0.2s;
-  display:flex;align-items:center;gap:6px;
-}
-#sgBackBtn button:hover {
-  border-color:#00e5a0;
-  color:#00e5a0;
-}
-#sgBackBtn .sg-title {
-  font-family:'JetBrains Mono',monospace;
-  font-size:11px;
-  font-weight:700;
-  color:#00e5a0;
-  letter-spacing:2px;
-}
-#sgBackBtn .sg-sub {
-  font-family:'JetBrains Mono',monospace;
-  font-size:9px;
-  color:#555575;
-  letter-spacing:1px;
-}
-#sgApp {
-  flex:1;
-  overflow-y:auto;
-  overflow-x:hidden;
-  padding-top:52px;
-}
-#sgApp::-webkit-scrollbar {width:3px}
-#sgApp::-webkit-scrollbar-thumb {background:#22223a;border-radius:4px}
-
-/* Scoped SG styles */
-
-#sgOverlay{
+:root{
   --bg:#07070f;--surface:#0e0e1c;--card:#131320;--card2:#1a1a2c;--border:#22223a;
   --text:#eeeeff;--muted:#555575;--soft:#888899;
   --chem:#00e5a0;--chem-d:rgba(0,229,160,.12);
@@ -902,79 +731,9 @@ body::after{content:'';position:fixed;inset:0;
 .sync-dot.synced{background:var(--success)}
 .sync-dot.syncing{background:var(--warn);animation:blink .6s infinite}
 .sync-dot.offline{background:var(--muted)}
-
 </style>
-
 </head>
 <body>
-
-<!-- LOADING OVERLAY -->
-<div id="loadingOverlay">
-  <h2>LOADING...</h2>
-  <p>SYNCING YOUR PROGRESS</p>
-  <div class="load-bar"><div class="load-fill"></div></div>
-</div>
-
-<!-- PLANNER -->
-<div class="wrap" id="plannerWrap">
-<header>
-  <div class="hdr-top">
-    <div class="title-block">
-      <h1>45-DAY<br><em>A/L</em> BLITZ</h1>
-      <p id="dateInfo">PHYSICS · CHEMISTRY · COMBINED MATHS — PRIORITY ORDER</p>
-      <div id="syncBadge" class="sync-status sync-loading"><div class="sync-dot-anim"></div>SYNCING...</div>
-    </div>
-    <div class="ring-area">
-      <svg viewBox="0 0 80 80">
-        <circle cx="40" cy="40" r="32" fill="none" stroke="#1e2a35" stroke-width="5"/>
-        <circle id="ring" cx="40" cy="40" r="32" fill="none" stroke="#fbbf24" stroke-width="5"
-          stroke-dasharray="201.1" stroke-dashoffset="201.1"
-          stroke-linecap="round" transform="rotate(-90 40 40)" style="transition:stroke-dashoffset 0.7s"/>
-      </svg>
-      <div class="ring-pct" id="pctText">0% DONE</div>
-    </div>
-  </div>
-</header>
-
-<div class="stats">
-  <div class="stat"><div class="stat-v sv-gold" id="sToday">1</div><div class="stat-l">TODAY</div></div>
-  <div class="stat"><div class="stat-v sv-green" id="sDone">0</div><div class="stat-l">DONE</div></div>
-  <div class="stat"><div class="stat-v sv-blue" id="sLeft">45</div><div class="stat-l">LEFT</div></div>
-  <div class="stat"><div class="stat-v" id="sStreak">🔥0</div><div class="stat-l">STREAK</div></div>
-</div>
-
-<div class="legend">
-  <div class="li"><div class="dot dp"></div>Physics</div>
-  <div class="li"><div class="dot dc"></div>Chemistry</div>
-  <div class="li"><div class="dot dm"></div>Combined Maths</div>
-  <div class="li"><span class="pri pri-h">HIGH</span> exam favourite</div>
-  <div class="li"><span class="pri pri-m">MED</span> commonly tested</div>
-</div>
-
-<div class="filters">
-  <button class="fb fall active" onclick="setFilter('all',this)">ALL DAYS</button>
-  <button class="fb fph" onclick="setFilter('ph',this)">PHYSICS</button>
-  <button class="fb fch" onclick="setFilter('ch',this)">CHEMISTRY</button>
-  <button class="fb fma" onclick="setFilter('ma',this)">MATHS</button>
-  <button class="fb fall" onclick="setFilter('todo',this)">TO DO</button>
-  <button class="fb fall" onclick="setFilter('done2',this)">DONE ✓</button>
-</div>
-
-<div class="grid" id="grid"></div>
-</div>
-
-
-<!-- STUDYGUARD OVERLAY (DAY 45 STUDY APP) -->
-<div id="sgOverlay">
-  <div id="sgBackBtn">
-    <button onclick="closeSGApp()">← BACK TO PLANNER</button>
-    <div>
-      <div class="sg-title">STUDYGUARD PRO v5</div>
-      <div class="sg-sub">DAY 45 — FINAL STUDY SESSION</div>
-    </div>
-  </div>
-  <div id="sgApp">
-
 
 <!-- ═══════════════════════════════════════
      AUTH SCREEN
@@ -3860,227 +3619,822 @@ function ttPrintDay(){
   <p>Study: ${stats.studyHours}h | Sleep: ${stats.sleepHours}h | Wasted: ${stats.wasteHours}h | Productive: ${stats.productivePct}%</p>
   <table>${rows}</table>
   <div style="margin-top:16px;font-size:12px;color:#888">Printed from StudyGuard Pro · ${new Date().toLocaleString()}</div>
-  
-  </div>
-</div>
+  </body></html>`);
+  win.document.close();
+  win.print();
+}
 
+// Backup/restore
+function ttBackup(){
+  const data={tt:TT_DATA,notes:TT_NOTES_DATA,exam:TT_EXAM,ts:Date.now()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`studyguard-timetable-${todayStr()}.json`;a.click();
+  toast('Backup downloaded','ok');
+}
+function ttRestoreClick(){document.getElementById('ttRestoreInput').click();}
+function ttRestore(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(d.tt) TT_DATA=d.tt;
+      if(d.notes) TT_NOTES_DATA=d.notes;
+      if(d.exam) TT_EXAM=d.exam;
+      ttSave(); ttRenderGrid(); ttUpdateDateLabel(); ttUpdateCountdown();
+      toast('Timetable data restored!','ok');
+    }catch(err){toast('Invalid backup file','warn');}
+  };
+  r.readAsText(f);
+}
 
-<script>
-// ═══════════════════════════════════════════════
-// STORAGE: window.storage for cross-device sync
-// ═══════════════════════════════════════════════
+// Achievements
+const TT_ACHIEVEMENTS=[
+  {id:'tt_first',label:'First Block',desc:'Mark your first time block',icon:'🌱',check:stats=>stats.totalFilled>=1},
+  {id:'tt_full_day',label:'Planner',desc:'Fill 80+ blocks in a day',icon:'📅',check:stats=>stats.totalFilled>=80},
+  {id:'tt_deep4',label:'Deep Work',desc:'4+ hours deep study in one day',icon:'🔬',check:stats=>stats.counts.deep>=16},
+  {id:'tt_sleep8',label:'Sleep Champion',desc:'8h sleep in one day',icon:'💤',check:stats=>stats.sleepBlocks>=32},
+  {id:'tt_zero_waste',label:'Zero Waste',desc:'No wasted/online time in a day',icon:'⭐',check:stats=>stats.totalFilled>40&&stats.wasteBlocks===0},
+  {id:'tt_streak3',label:'3-Day Planner',desc:'Plan 3 consecutive days',icon:'🔥',check:()=>ttConsecDays()>=3},
+  {id:'tt_streak7',label:'Weekly Master',desc:'Plan 7 consecutive days',icon:'🏆',check:()=>ttConsecDays()>=7},
+  {id:'tt_10h',label:'Marathon',desc:'10+ productive hours in one day',icon:'💪',check:stats=>stats.studyBlocks+stats.classBlocks>=40},
+];
+let TT_ACH_UNLOCKED = JSON.parse(localStorage.getItem('studyguard_tt_ach')||'[]');
 
-const SK = "al45v3_done";
-const SK2 = "al45v3_start";
-
-let done = new Set();
-let start = null;
-let storageReady = false;
-
-async function loadFromStorage() {
-  try {
-    const doneRes = await window.storage.get(SK);
-    if (doneRes && doneRes.value) {
-      done = new Set(JSON.parse(doneRes.value));
-    }
-  } catch(e) { done = new Set(); }
-
-  try {
-    const startRes = await window.storage.get(SK2);
-    if (startRes && startRes.value) {
-      start = startRes.value;
-    }
-  } catch(e) { start = null; }
-
-  if (!start) {
-    start = new Date().toISOString().slice(0,10);
-    try { await window.storage.set(SK2, start); } catch(e) {}
+function ttConsecDays(){
+  let count=0;
+  for(let i=0;i<30;i++){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    if(TT_DATA[ds]&&TT_DATA[ds].some(b=>b&&b!=='empty')) count++;
+    else break;
   }
-  storageReady = true;
+  return count;
 }
 
-async function saveDone() {
-  try {
-    await window.storage.set(SK, JSON.stringify([...done]));
-  } catch(e) {}
+function ttCheckAchievements(){
+  const stats=ttCalcStats(ttCurrentDate);
+  TT_ACHIEVEMENTS.forEach(ach=>{
+    if(!TT_ACH_UNLOCKED.includes(ach.id)&&ach.check(stats)){
+      TT_ACH_UNLOCKED.push(ach.id);
+      localStorage.setItem('studyguard_tt_ach',JSON.stringify(TT_ACH_UNLOCKED));
+      toast(`${ach.icon} Achievement: ${ach.label}!`,'ok');
+    }
+  });
+  ttRenderAchievements();
 }
 
-// ═══════════════════════════════════════════════
-// PLAN DATA
-// ═══════════════════════════════════════════════
-const PLAN = [
-{p:{t:"Newton's Laws — F=ma, momentum, impulse; conservation of linear momentum; collisions & explosions",pri:"H"},c:{t:"Chemical Equilibrium — Kc & Kp; Le Chatelier's principle; temperature, pressure & catalyst effects",pri:"H"},m:{t:"Quadratic Functions & Equations — completing the square; discriminant; sum/product of roots; nature of roots; symmetric functions of roots",pri:"H"}},
-{p:{t:"SHM — a=−ω²x; KE–PE interchange; simple pendulum T=2π√(l/g); mass-spring T=2π√(m/k); graphs",pri:"H"},c:{t:"Acid-Base Equilibrium — Kw, Ka, Kb; pH of acids/bases/salts; titration curves; indicator selection",pri:"H"},m:{t:"Trigonometric Identities — Pythagorean identities; compound angle formulae; double/triple/half-angle; product-sum; a·cosθ+b·sinθ=R·cos(θ−α)",pri:"H"}},
-{p:{t:"EM Induction — Faraday's & Lenz's laws; rotating coil EMF; AC generator; RMS & peak; transformers",pri:"H"},c:{t:"Chemical Kinetics — rate law; orders & units of k; half-life; initial rate method; rate-determining step",pri:"H"},m:{t:"Differentiation — first principles; product/quotient/chain rules; implicit & parametric; inverse trig derivatives; higher-order derivatives",pri:"H"}},
-{p:{t:"Electric Field & Capacitance — Coulomb's law; Gauss's theorem; V=kQ/r; C=ε₀A/d; series/parallel; W=½CV²",pri:"H"},c:{t:"Energetics — Hess's law; enthalpy of formation/combustion/bond energy; Born-Haber cycle & lattice enthalpy",pri:"H"},m:{t:"Applications of Differentiation — stationary points; max/min (1st & 2nd derivative tests); curve sketching with asymptotes; optimisation problems",pri:"H"}},
-{p:{t:"Thermal Physics — gas laws; pV=nRT; kinetic theory; mean KE=3/2 kT; Maxwell-Boltzmann distribution",pri:"H"},c:{t:"Alkenes, Alkynes & Benzene — electrophilic addition (Markovnikov); electrophilic substitution (nitration, halogenation, Friedel-Crafts); directing groups",pri:"H"},m:{t:"Integration — indefinite & definite integrals; theorems; f'(x)/f(x) forms; partial fractions; trig identities in integration; substitution; integration by parts",pri:"H"}},
-{p:{t:"DC Circuits — Kirchhoff's laws; Wheatstone bridge; potentiometer; EMF & internal resistance; P=VI=I²R",pri:"H"},c:{t:"Alcohols, Aldehydes, Ketones & Carboxylic Acids — reactions, nucleophilic addition; oxidation tests; esterification; acid derivatives",pri:"H"},m:{t:"Integration Applications — area under curve; area between curves; volume of revolution (∫πy²dx); definite integral properties",pri:"H"}},
-{p:{t:"Waves — superposition; stationary waves (strings & pipes); interference; Doppler effect; resonance column",pri:"H"},c:{t:"s, p & d Block Elements — Na/Mg/Ca/N/S/halogen chemistry; anion identification; d-block oxidation states & complexes",pri:"H"},m:{t:"Vectors (CM-II) — triangle/parallelogram law; unit vectors; position vectors; scalar (dot) product; vector product; angle between vectors",pri:"H"}},
-{p:{t:"Work, Energy & Power — KE, GPE, elastic PE; work-energy principle; conservation of mechanical energy; power & efficiency",pri:"H"},c:{t:"Electrochemistry — standard electrode potential; SHE; E°cell; electrochemical series; electrolysis; Faraday constant",pri:"H"},m:{t:"Forces & Equilibrium (CM-II) — resultant of coplanar forces; resolution; Lami's theorem; triangle of forces; polygon of forces",pri:"H"}},
-{p:{t:"Magnetic Fields — F=BIl, F=Bqv; Biot-Savart; field near wire/coil/solenoid; torque on loop; Hall effect",pri:"H"},c:{t:"Buffers & Solubility Equilibria — Henderson equation; buffer pH; Ksp; common ion effect; cation group analysis",pri:"H"},m:{t:"Moments & Rigid Body Equilibrium (CM-II) — moment of a force; couple; reducing system to force+couple; conditions for equilibrium of rigid body",pri:"H"}},
-{p:{t:"Equilibrium — moments; two & three force equilibrium; stable/unstable/neutral; centre of gravity",pri:"H"},c:{t:"Atomic Structure & Periodic Trends — electron configurations (Z=1–54); quantum numbers; IE trends; atomic radius; electronegativity",pri:"H"},m:{t:"Newton's Laws & Dynamics (CM-II) — Newton's 1st/2nd/3rd laws; F=ma; connected bodies; pulleys & wedges; weight vs mass",pri:"H"}},
-{p:{t:"Matter & Radiation — photoelectric effect; de Broglie; radioactive decay law; half-life; nuclear binding energy; fission & fusion",pri:"H"},c:{t:"Bonding & Shape — Lewis structures; VSEPR; hybridisation sp/sp²/sp³; σ & π bonds; resonance; H-bonding",pri:"H"},m:{t:"Work, Energy & Power (CM-II) — work done by constant force; KE & PE; work-energy equation; conservation of mechanical energy; elastic PE (Hooke's law); power P=Fv",pri:"H"}},
-{p:{t:"Optics — Snell's law; critical angle & TIR; prism (min deviation); thin lens 1/v−1/u=1/f; eye defects; microscope & telescope",pri:"H"},c:{t:"Halohydrocarbons & Grignard — polar C-X bond; SN1 vs SN2; Grignard preparation & reactions",pri:"M"},m:{t:"Impulse, Momentum & Collisions (CM-II) — impulse I=Δ(mv); conservation of linear momentum; Newton's law of restitution; direct impact; loss of KE",pri:"H"}},
-{p:{t:"Rotational Motion — moment of inertia; τ=Iα; rotational KE; angular momentum; conservation of angular momentum",pri:"M"},c:{t:"Nitrogen Compounds — amine reactions; basicity; diazonium salt preparation & reactions (Sandmeyer & coupling)",pri:"M"},m:{t:"Circular Motion (CM-II) — angular velocity & acceleration; centripetal acceleration & force; conical pendulum; motion in vertical circle; energy conservation in circular motion",pri:"H"}},
-{p:{t:"Gravitational Field — Newton's law; g & V=−GM/r; orbital energy; satellites; geostationary orbit; escape velocity",pri:"M"},c:{t:"Entropy & Gibbs Energy — ΔG=ΔH−TΔS; spontaneity; standard ΔG°, ΔH°, ΔS° calculations; temperature crossover",pri:"M"},m:{t:"Simple Harmonic Motion (CM-II) — definition; ẍ=−ω²x; general solution; amplitude & period; SHM on horizontal & vertical line (springs/strings); SHM + free-fall combination",pri:"H"}},
-{p:{t:"Change of State & Vapour — latent heat; SVP; dew point; first law ΔU=Q−W; p-V diagrams; isothermal & adiabatic",pri:"M"},c:{t:"Gaseous State — KMT; Maxwell-Boltzmann curves; Dalton's law; van der Waals equation; compressibility",pri:"M"},m:{t:"Projectiles (CM-II) — horizontal & vertical components; equation of trajectory; max height; time of flight; range; two angles for same range; max range for given speed",pri:"H"}},
-{p:{t:"Sound — stationary waves in strings & tubes; sonometer; beats; intensity & dB; Doppler applications",pri:"M"},c:{t:"Chemical Calculations — mole, empirical/molecular formulae; balancing redox (oxidation numbers & half-equations); stoichiometry",pri:"M"},m:{t:"Relative Motion (CM-II) — relative displacement, velocity & acceleration; shortest distance; time of collision; path relative to another particle; use of vectors",pri:"M"}},
-{p:{t:"Semiconductors & Electronics — p-n junction; rectification; Zener; BJT; logic gates; op-amp; SR flip-flop",pri:"M"},c:{t:"d-Block Complexes & Reactions — CrO₄²⁻/Cr₂O₇²⁻/MnO₄⁻ as oxidants; IUPAC naming; reactions of transition metal ions",pri:"M"},m:{t:"Polynomials & Partial Fractions — remainder & factor theorems; synthetic division; solving degree ≤4 equations; resolving into partial fractions (distinct/repeated/quadratic factors)",pri:"M"}},
-{p:{t:"Current Electricity — drift velocity; resistivity; temperature coefficient; Ohm's law & I-V curves; superconductivity",pri:"M"},c:{t:"Basic Organic Chemistry — IUPAC nomenclature; functional groups; chain/positional/functional isomers; geometrical & optical isomerism",pri:"M"},m:{t:"Trigonometric Functions & Equations — graphs of sin/cos/tan; general solutions (sinθ=sinα etc.); inverse trig functions (domain/range/graphs); inverse trig problems",pri:"M"}},
-{p:{t:"Projectile Motion & Kinematics — equations of motion; v-t & s-t graphs; projectile range & max height; relative motion",pri:"M"},c:{t:"Phenols — higher acidity vs alcohols; ring activation; bromination & nitration at ortho/para; no SN reaction",pri:"M"},m:{t:"Straight Line & Coordinate Geometry — distance formula; section formula; various forms of line; angle between lines; perpendicular distance; bisectors; parametric form",pri:"M"}},
-{p:{t:"Damped & Forced Oscillations — free/damped/forced; resonance; Barton's pendulum; amplitude-frequency curves",pri:"M"},c:{t:"Phase Equilibria — vapour pressure; phase diagram of water; Raoult's law; fractional distillation; KD",pri:"M"},m:{t:"Circle — equation of circle; line-circle intersection; tangent at point & from external point; chord of contact; circle through intersection points S+λU=0; orthogonal circles",pri:"M"}},
-{p:{t:"Thermal Conduction & Radiation — thermal conductivity k; Searle's method; Stefan's law; Wien's law; black body radiation",pri:"M"},c:{t:"Industrial Chemistry — Haber, Ostwald, Contact, Solvay processes; NaOH membrane cell; blast furnace",pri:"M"},m:{t:"Limits & Continuity — basic limit theorems; lim(xⁿ−aⁿ)/(x−a)=naⁿ⁻¹; lim(sinx/x)=1; one-sided limits; limits at infinity; asymptotes; continuity at a point",pri:"M"}},
-{p:{t:"Measurement — SI units; dimensions; Vernier caliper & micrometer; errors; significant figures; vector resolution",pri:"M"},c:{t:"Polymers & Environmental Pollution — addition & condensation polymers; acid rain; smog; ozone depletion; global warming; eutrophication",pri:"M"},m:{t:"Inequalities — basic properties; linear, quadratic & rational inequalities (algebraic & graphical); modulus inequalities (linear only)",pri:"M"}},
-{p:{t:"Fluid Dynamics — continuity equation (Av=const); Bernoulli's principle & applications; viscosity; Stokes' law",pri:"M"},c:{t:"p-Block: Al, C, N — Al amphoteric; AlCl₃; graphite & diamond; CO/CO₂; oxides/oxoacids of N; HNO₃ reactions",pri:"M"},m:{t:"Complex Numbers — real/imaginary parts; algebraic operations; conjugate; modulus; Argand diagram; polar form; argument; De Moivre's theorem; loci",pri:"M"}},
-{p:{t:"Mechanical Properties — Hooke's law; stress/strain/Young modulus; surface tension; capillary rise; terminal velocity",pri:"M"},c:{t:"p-Block: O, S, Halogens — H₂SO₄/H₂O₂/H₂S/SO₂ reactions; Cl₂ reactions; disproportionation; noble gas fluorides",pri:"M"},m:{t:"Matrices — definitions; operations; transpose; 2×2 inverse; solving simultaneous equations; graphical interpretation of solution types",pri:"M"}},
-{p:{t:"Thermal Expansion — linear/area/volume expansivity; real & apparent expansion of liquids; anomalous water expansion",pri:"M"},c:{t:"Chemical Kinetics: Mechanisms & Catalysis — energy diagrams; transition states; elementary vs multistep; catalyst & activation energy",pri:"M"},m:{t:"Permutations & Combinations — n!, fundamental counting principle; ⁿPᵣ; cyclic permutations; ⁿCᵣ; distinguishing P vs C; applications",pri:"M"}},
-{p:{t:"REVISION: Newton's Laws + Momentum + Collisions + Equilibrium + Work-Energy — past paper MCQs & structured Qs",pri:"H"},c:{t:"REVISION: Equilibrium (Kc/Kp/Le Chatelier) + Acid-Base pH + Buffer (Henderson) — past paper questions",pri:"H"},m:{t:"REVISION: Quadratic equations + Differentiation + Integration (all methods) — past paper questions",pri:"H"}},
-{p:{t:"REVISION: SHM + Waves + Stationary Waves + Doppler + Optics — past paper structured Qs",pri:"H"},c:{t:"REVISION: Kinetics (rate law, order, half-life) + Energetics (Hess, Born-Haber, ΔG) — past paper Qs",pri:"H"},m:{t:"REVISION: Trigonometric identities + inverse trig + general solutions + CM-II Forces & Moments — past paper Qs",pri:"H"}},
-{p:{t:"EM Spectrum & LASER — EM wave properties; ranges & uses; LASER principle & applications",pri:"M"},c:{t:"Electrochemical Cells — cell notation; Daniel cell; EMF calculations; electrolysis products",pri:"M"},m:{t:"Series & Sequences — AP & GP sums; Σr, Σr², Σr³ formulae; method of differences; partial fractions for sums; convergence of infinite series",pri:"M"}},
-{p:{t:"Specific Heat & Latent Heat — SHC; method of mixtures; Newton's cooling; latent heat; pressure effects on melting/boiling",pri:"M"},c:{t:"s-Block Trends — solubility of hydroxides/carbonates/sulphates; thermal stability of nitrates/carbonates; flame tests",pri:"M"},m:{t:"Binomial Theorem — binomial coefficients; general term; proof by induction; relationships among coefficients; specific term problems",pri:"M"}},
-{p:{t:"Newton's Laws: Applications — connected bodies; lift problems; static/limiting/dynamic friction; free body diagrams",pri:"M"},c:{t:"Periodic Table & Trends — shielding, Zeff; IE variation; electron affinity; formation of ions",pri:"M"},m:{t:"Friction & Equilibrium of Rigid Bodies (CM-II) — laws of friction; limiting friction; angle of friction; coefficient μ; problems on inclined planes & horizontal surfaces",pri:"M"}},
-{p:{t:"EM Induction: Applications — eddy currents; back EMF; self-induction; AC circuits (qualitative); transmission efficiency",pri:"M"},c:{t:"Alkanes & Haloalkanes — free-radical substitution; mechanism of chlorination; homolytic cleavage; SN1 vs SN2 depth",pri:"M"},m:{t:"Frameworks & Jointed Rods (CM-II) — types of joints; forces at smooth joints; Bow's notation; stress diagrams; stress calculations in light frameworks",pri:"M"}},
-{p:{t:"Gauss's Theorem & Electric Potential — flux; field inside/outside sphere; infinite plate & wire; equipotentials; potential gradient",pri:"M"},c:{t:"Carboxylic Acids & Derivatives — acidity order; reactions with Na/NaOH/Na₂CO₃; acid chloride & ester nucleophilic substitution",pri:"M"},m:{t:"Centre of Mass (CM-II) — centre of mass of uniform bodies (rod, disc, ring, cylinder, sphere, cone, hemisphere); composite & remainder bodies; suspended bodies; stability",pri:"M"}},
-{p:{t:"Magnetic Field Applications — force between conductors; definition of ampere; DC motor; galvanometer; ammeter/voltmeter conversion",pri:"M"},c:{t:"Amines & Diazonium Salts — aliphatic vs aromatic amines; basicity trend; Sandmeyer & coupling reactions",pri:"M"},m:{t:"Probability (CM-II) — sample space; event types; classical/axiomatic definitions; addition rule; conditional probability; multiplication rule; independence; Bayes' theorem",pri:"M"}},
-{p:{t:"Gravitational Field: Satellites — orbital speed & period; geostationary orbit; gravitational PE & total energy; escape velocity derivation",pri:"M"},c:{t:"Real Gases & Compressibility — deviations from ideal; van der Waals corrections; compressibility factor Z; critical temperature",pri:"M"},m:{t:"Statistics (CM-II) — mean, median, mode (ungrouped & grouped); quartiles; percentiles; box plots; range; IQR; variance & SD; pooled mean/variance; z-score; skewness",pri:"M"}},
-{p:{t:"Semiconductor Devices — Zener regulation; LED & photodiode; solar cells; BJT common emitter; JFET; op-amp inverting/non-inverting",pri:"M"},c:{t:"Ionic Equilibrium: Ksp — Ksp calculations; predicting precipitation; common ion effect; qualitative cation analysis",pri:"M"},m:{t:"Mathematical Induction — principle of MI; proof of summation, divisibility & inequality results using PMI",pri:"M"}},
-{p:{t:"REVISION: EM Induction + DC Circuits (Kirchhoff, potentiometer) + Magnetic Fields — structured past paper Qs",pri:"H"},c:{t:"REVISION: Organic Mechanisms (electrophilic addition/substitution, nucleophilic addition/substitution) — past paper Qs",pri:"H"},m:{t:"REVISION: CM-II Dynamics — Newton's laws + projectiles + relative motion + impulse & momentum + collisions — past paper Qs",pri:"H"}},
-{p:{t:"REVISION: Electric Fields + Capacitance + Matter & Radiation (photoelectric, radioactivity, nuclear) — past paper Qs",pri:"H"},c:{t:"REVISION: Electrochemistry (cells, electrolysis, Faraday) + d-block & complex ions — past paper Qs",pri:"H"},m:{t:"REVISION: CM-II Mechanics — circular motion + SHM + centre of mass + frameworks + friction — past paper Qs",pri:"H"}},
-{p:{t:"Vectors & Measurement — parallelogram/polygon of forces; vector resolution; error analysis; dimensions",pri:"M"},c:{t:"Stoichiometry — limiting reagent; % yield; concentration; standard solution preparation; redox titration calculations",pri:"M"},m:{t:"Functions & Real Numbers — domain/codomain/range; one-one & onto; inverse & composite functions; graphs; modulus function; types of functions",pri:"M"}},
-{p:{t:"Circular Motion — centripetal acceleration & force; banked roads; conservation of angular momentum examples",pri:"M"},c:{t:"Plant-Based Industries & Polymers — ethanol/vinegar/biodiesel; steam distillation; PVC/nylon/polyester/Bakelite; vulcanisation",pri:"M"},m:{t:"Index & Logarithm Laws — index rules; log rules; change of base; solving exponential & log equations; derivatives of eˣ, ln x, aˣ; natural log function properties",pri:"M"}},
-{p:{t:"Elasticity & Surface Tension — Young modulus experiments; energy in stretched wire; Poiseuille; surface energy",pri:"M"},c:{t:"p-Block Trends Across Period 3 — acid/base nature of oxides/hydroxides; hydrolysis of halides; hydrides comparison",pri:"M"},m:{t:"Trigonometry: Sine & Cosine Rules — proof & applications; area of triangle; problems involving bearings & 3D geometry",pri:"M"}},
-{p:{t:"Diffraction & Polarisation — single-slit diffraction; Young's double-slit (λ=ax/D); polarisation by reflection; applications",pri:"M"},c:{t:"Conductivity & Electrode Types — strong/weak electrolytes; metal-ion/gas/redox electrodes; Ag/AgCl reference",pri:"M"},m:{t:"Geometry (Basic Course) — circle theorems; Pythagoras extensions (Apollonius); bisector theorem; similar triangles; incentre/circumcentre/orthocentre/centroid",pri:"M"}},
-{p:{t:"Convection & Radiation — Stefan's law; Wien's displacement law; greenhouse effect; Newton's cooling (qualitative)",pri:"M"},c:{t:"Energetics: ΔG & Spontaneity — sign analysis of ΔH/ΔS/ΔG; temperature crossover; energy cycles",pri:"M"},m:{t:"Algebra Review (Basic Course) — expansion & factorisation of a³±b³; algebraic fractions; simultaneous equations (up to 3 unknowns); indices & logs; properties of proportion",pri:"M"}},
-{p:{t:"FULL PHYSICS MOCK — complete past paper under timed conditions; analyse every error",pri:"H"},c:{t:"REVISION: Acid-Base + Buffer + Ksp + Phase Equilibria — mixed problem set",pri:"H"},m:{t:"REVISION: CM-I — Quadratics + Polynomials + Inequalities + Complex Numbers + Matrices + Probability + Statistics — mixed past paper Qs",pri:"H"}},
-{p:{t:"REVISION: Thermal Physics (gas laws, KE, SHC, latent heat) + Gravitation — mixed problem set",pri:"H"},c:{t:"FULL CHEMISTRY MOCK — complete past paper under timed conditions; analyse every error",pri:"H"},m:{t:"FULL COMBINED MATHS MOCK (Paper I + Paper II) — timed past paper; identify weak spots",pri:"H"}},
-{p:{t:"FINAL DAY: Flash-review all HIGH priority Physics — formulae sheet, common mistakes, exam technique",pri:"H"},c:{t:"FINAL DAY: Flash-review all HIGH priority Chemistry — reaction summaries, mechanisms, key equations",pri:"H"},m:{t:"FINAL DAY: Flash-review all HIGH priority Maths — key formulae (derivatives, integrals, dynamics), common errors, exam strategy",pri:"H"}}
+function ttRenderAchievements(){
+  const container=document.getElementById('ttAchGrid');
+  if(!container)return;
+  container.innerHTML=TT_ACHIEVEMENTS.map(ach=>{
+    const unlocked=TT_ACH_UNLOCKED.includes(ach.id);
+    return `<div class="ach-item${unlocked?' unlocked':''}" title="${ach.desc}">
+      <div class="ach-icon">${ach.icon}</div>
+      <div class="ach-name">${ach.label}</div>
+      <div class="ach-req">${ach.desc}</div>
+    </div>`;
+  }).join('');
+}
+
+// Home widget mini-grid (96 dots)
+function ttUpdateHomeWidget(){
+  const mini=document.getElementById('ttHomeMiniGrid');
+  if(!mini)return;
+  const blocks=ttDateBlocks(todayStr());
+  const stats=ttCalcStats(todayStr());
+  let html='';
+  blocks.forEach((b,i)=>{
+    const t=TT_TYPES.find(x=>x.id===b);
+    const color=t?t.color:'rgba(34,34,58,0.8)';
+    html+=`<div style="width:3px;height:8px;background:${color};flex-shrink:0;border-radius:1px" title="${ttBlockToTime(i)}"></div>`;
+  });
+  mini.innerHTML=html;
+  const el=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  el('ttHomeStudy',stats.studyHours+'h');
+  el('ttHomeSleep',stats.sleepHours+'h');
+  el('ttHomeWaste',stats.wasteHours+'h');
+  el('ttHomePct',stats.productivePct+'%');
+}
+
+// Init timetable on page open
+function ttInit(){
+  ttCurrentDate=todayStr();
+  ttRenderGrid();
+  ttUpdateDateLabel();
+  ttUpdateCountdown();
+  ttAnalytics();
+  ttRenderAchievements();
+  const notesEl=document.getElementById('ttNotes');
+  if(notesEl){notesEl.value=TT_NOTES_DATA[ttCurrentDate]||'';}
+  if(TT_EXAM.date){
+    const de=document.getElementById('ttExamDate');
+    const ne=document.getElementById('ttExamName');
+    if(de)de.value=TT_EXAM.date;
+    if(ne)ne.value=TT_EXAM.name||'A/L Examination';
+  }
+  // Scroll to current time
+  const now=new Date();
+  const curH=now.getHours();
+  const body=document.getElementById('ttGridBody');
+  if(body){
+    const rowH=14*4; // approx 4 blocks per hour
+    body.scrollTop=Math.max(0,(curH-2)*rowH);
+  }
+}
+
+// ══════════════════════════════════════════
+// SUBJECT MANAGER
+// ══════════════════════════════════════════
+const LS_SUBS = 'studyguard_subjects';
+const SUB_COLORS = [
+  'var(--chem)','var(--phys)','var(--math)','var(--info)','var(--ai)',
+  'var(--warn)','#f472b6','#34d399','#fb923c','#60a5fa'
+];
+const SUB_COLOR_HEX = [
+  '#00e5a0','#ff6b35','#a78bfa','#38bdf8','#c084fc',
+  '#ffc233','#f472b6','#34d399','#fb923c','#60a5fa'
 ];
 
-const TOTAL = 45;
-
-function todayIdx() {
-  const s = new Date(start), n = new Date();
-  s.setHours(0,0,0,0); n.setHours(0,0,0,0);
-  return Math.max(0, Math.min(Math.floor((n - s) / 86400000), TOTAL - 1));
+// Load subject definitions (persisted or default)
+function loadSUBS(){
+  const saved = lsGet(LS_SUBS, null);
+  if(saved && Array.isArray(saved) && saved.length >= 1){
+    // Rebuild SUBS object from saved array
+    const keys = ['chem','phys','math','sub4','sub5'];
+    Object.keys(SUBS).forEach(k=>delete SUBS[k]);
+    saved.forEach((s,i)=>{
+      const key = s.key || keys[i] || ('sub'+(i+1));
+      SUBS[key]={name:s.name,icon:s.icon,color:s.color,tag:key+'-tag'};
+    });
+  }
 }
 
-let filt = 'all';
-
-function priTag(p) {
-  if (!p) return '';
-  return `<span class="pri ${p==='H'?'pri-h':'pri-m'}">${p==='H'?'HIGH':'MED'}</span>`;
+// Save SUBS to localStorage
+function saveSUBS(){
+  const arr = Object.entries(SUBS).map(([key,s])=>({key,name:s.name,icon:s.icon,color:s.color}));
+  lsSet(LS_SUBS, arr);
 }
 
-function build() {
-  const g = document.getElementById('grid');
-  g.innerHTML = '';
-  const ti = todayIdx();
-  const isRev = i => PLAN[i].p.t.startsWith('REVISION') || PLAN[i].p.t.startsWith('FULL');
-  const isFinal = i => i === 44;
+// Temp edit state for Subject Manager UI
+let subManagerDraft = [];
 
-  PLAN.forEach((day, i) => {
-    const dn = i + 1, isDone = done.has(i), isToday = i === ti;
-    const rev = isRev(i), final = isFinal(i);
-    const c = document.createElement('div');
-    c.className = 'day-card' + (isDone?' done-card':'') + (isToday?' today-card':'') + (rev?' rev-card':'') + (final?' final-card':'');
-    c.dataset.i = i; c.dataset.done = isDone ? '1' : '0';
-    
-    const accentClass = final ? 'acc-final' : (rev ? 'acc-rev' : 'acc-normal');
-    const dayLabel = final ? '<span class="final-tag">FINAL DAY</span>' : (rev ? '<span class="rev-tag">REVISION</span>' : '');
+function subManagerOpen(){
+  subManagerDraft = Object.entries(SUBS).map(([key,s])=>({key,name:s.name,icon:s.icon,color:s.color}));
+  subManagerRender();
+}
 
-    c.innerHTML = `
-      <div class="card-accent ${accentClass}"></div>
-      <div class="card-head">
-        <span class="day-lbl">DAY ${String(dn).padStart(2,'0')} ${dayLabel}</span>
-        <div class="head-right">
-          ${isToday?'<span class="today-badge">TODAY</span>':''}
-          <button class="cbtn" onclick="tog(event,${i})">${isDone?'✓':''}</button>
-        </div>
-      </div>
-      <div class="topics">
-        <div class="tr ph"><span class="tlbl">PHY</span><span class="topic-text">${day.p.t}</span>${priTag(day.p.pri)}</div>
-        <div class="tr ch"><span class="tlbl">CHE</span><span class="topic-text">${day.c.t}</span>${priTag(day.c.pri)}</div>
-        <div class="tr ma"><span class="tlbl">MAT</span><span class="topic-text">${day.m.t}</span>${priTag(day.m.pri)}</div>
-      </div>
-      ${final ? `<button class="open-app-btn" onclick="openSGApp(event)">🚀 LAUNCH STUDYGUARD PRO — FINAL SESSION</button>` : ''}
-    `;
-    applyF(c, filt);
-    g.appendChild(c);
+function subManagerRender(){
+  const container = document.getElementById('subjectManagerList');
+  if(!container) return;
+  const addBtn = document.getElementById('subAddBtn');
+  if(addBtn) addBtn.style.display = subManagerDraft.length >= 5 ? 'none' : 'block';
+  container.innerHTML = subManagerDraft.map((s,i)=>{
+    const isCore = i < 3; // first 3 are core, can rename but not delete
+    return `<div class="subm-row" id="subm_row_${i}">
+      <input class="subm-icon-inp" id="subm_icon_${i}" value="${s.icon}" maxlength="2" title="Click to change emoji" onfocus="this.select()" placeholder="📚">
+      <input class="subm-name-inp" id="subm_name_${i}" value="${s.name}" placeholder="Subject name" maxlength="24">
+      <div class="subm-color" style="background:${s.color}" title="Click to change color" onclick="subManagerCycleColor(${i})"></div>
+      ${isCore ? '' : `<button class="subm-del" onclick="subManagerDelete(${i})" title="Remove subject">✕</button>`}
+    </div>`;
+  }).join('');
+}
+
+function subManagerAdd(){
+  if(subManagerDraft.length >= 5){ toast('Max 5 subjects','warn'); return; }
+  const idx = subManagerDraft.length;
+  subManagerDraft.push({
+    key: 'sub'+(idx+1),
+    name: 'Subject '+(idx+1),
+    icon: ['📗','🔬','🎭','🌍','🎵'][idx-3] || '📘',
+    color: SUB_COLORS[idx] || 'var(--info)'
   });
-  updateStats();
+  subManagerRender();
+  // Focus the new name input
+  setTimeout(()=>{ const el=document.getElementById('subm_name_'+(idx)); if(el){el.focus();el.select();} },50);
 }
 
-function applyF(card, f) {
-  const isDone = card.dataset.done === '1';
-  let show = true;
-  if (f === 'done2') show = isDone;
-  if (f === 'todo') show = !isDone;
-  card.classList.toggle('hidden', !show);
+function subManagerDelete(i){
+  if(i < 3){ toast('Cannot remove core subjects','warn'); return; }
+  subManagerDraft.splice(i,1);
+  subManagerRender();
 }
 
-function setFilter(f, btn) {
-  filt = f;
-  document.querySelectorAll('.fb').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.day-card').forEach(c => applyF(c, f));
+function subManagerCycleColor(i){
+  const cur = subManagerDraft[i].color;
+  const idx = SUB_COLORS.indexOf(cur);
+  subManagerDraft[i].color = SUB_COLORS[(idx+1) % SUB_COLORS.length];
+  subManagerRender();
 }
 
-async function tog(e, i) {
-  e.stopPropagation();
-  done.has(i) ? done.delete(i) : done.add(i);
-  await saveDone();
-  build();
+function subManagerSave(){
+  // Read current input values
+  subManagerDraft.forEach((s,i)=>{
+    const nameEl = document.getElementById('subm_name_'+i);
+    const iconEl = document.getElementById('subm_icon_'+i);
+    if(nameEl) s.name = nameEl.value.trim() || s.name;
+    if(iconEl) s.icon = iconEl.value.trim() || s.icon;
+  });
+  if(subManagerDraft.some(s=>!s.name)){toast('All subjects need a name','bad');return;}
+
+  // Determine old keys for data migration
+  const oldKeys = Object.keys(SUBS);
+
+  // Rebuild SUBS
+  Object.keys(SUBS).forEach(k=>delete SUBS[k]);
+  const baseKeys = ['chem','phys','math','sub4','sub5'];
+  subManagerDraft.forEach((s,i)=>{
+    const key = s.key || baseKeys[i] || ('sub'+(i+1));
+    SUBS[key] = {name:s.name, icon:s.icon, color:s.color, tag:key+'-tag'};
+  });
+
+  // Ensure S.subTime has entries for all keys
+  const subKeys = Object.keys(SUBS);
+  subKeys.forEach(k=>{ if(!S.subTime[k]) S.subTime[k]=0; });
+  // Set currentSub to first if current is gone
+  if(!SUBS[S.currentSub]) S.currentSub = subKeys[0];
+  if(!SUBS[S.noteSub]) S.noteSub = subKeys[0];
+  if(!SUBS[S.fcSub]) S.fcSub = subKeys[0];
+
+  // Ensure MARKS and CUSTOM_CARDS have entries
+  subKeys.forEach(k=>{
+    if(!MARKS[k]) MARKS[k] = Array(15).fill(null);
+    if(!CUSTOM_CARDS[k]) CUSTOM_CARDS[k] = [];
+  });
+  if(!MARKS[currentMarksSub]) currentMarksSub = subKeys[0];
+
+  saveSUBS();
+  saveState();
+  lsSet(LS_MARKS, MARKS);
+  lsSet(LS_CARDS, CUSTOM_CARDS);
+
+  // Re-render all dynamic subject UIs
+  renderAllSubjectUI();
+  toast('✅ Subjects updated!','ok');
 }
 
-function updateStats() {
-  const d = done.size, l = TOTAL - d, pct = d / TOTAL;
-  const ti = todayIdx();
-  let streak = 0;
-  for (let i = ti; i >= 0; i--) { if (done.has(i)) streak++; else break; }
-  document.getElementById('sToday').textContent = ti + 1;
-  document.getElementById('sDone').textContent = d;
-  document.getElementById('sLeft').textContent = l;
-  document.getElementById('sStreak').textContent = '🔥' + streak;
-  document.getElementById('ring').style.strokeDashoffset = 201.1 - 201.1 * pct;
-  document.getElementById('pctText').textContent = Math.round(pct * 100) + '% DONE';
+function renderAllSubjectUI(){
+  const keys = Object.keys(SUBS);
+  // 1. Home subject tabs
+  renderSubTabs('page-home .sub-tabs', keys, 'selectSub', S.currentSub);
+  // 2. Time per subject bars
+  renderSubBreakdownBars(keys);
+  // 3. Marks sub-tabs
+  renderSubTabs('page-marks .marks-sub-tabs', keys, 'selectMarksSub', currentMarksSub, true);
+  // 4. Flashcard study sub-tabs
+  renderSubTabs('#page-flash .sub-tabs', keys, 'selectFCSub', S.fcSub);
+  // 5. FC Create mode sub-tabs
+  renderSubTabsInline('fcCreateMode', keys, 'setNewCardSub', newCardSubKey);
+  // 6. FC AI mode sub-tabs
+  renderSubTabsInline('fcAIMode', keys, 'setAIGenSub', aiGenSubKey);
+  // 7. Tools notes sub-tabs
+  renderSubTabsInline('page-tools', keys, 'selectNoteSub', S.noteSub);
+  // 8. Todo filter buttons
+  renderTodoFilters(keys);
+  // 9. Subject breakdown bars in home
+  updateBreakdown();
+  updateCIBtn();
+  // 10. Re-render marks if visible
+  renderMarksPage();
+  // 11. Re-render todos
+  renderTodos();
+  // 12. Inject dynamic CSS for new sub colors
+  injectSubjectCSS();
 }
 
-// ═══════════════════════════════════════════════
-// STUDYGUARD OVERLAY CONTROLS
-// ═══════════════════════════════════════════════
-function openSGApp(e) {
-  if (e) e.stopPropagation();
-  document.getElementById('sgOverlay').classList.add('active');
-  document.body.style.overflow = 'hidden';
+function injectSubjectCSS(){
+  let styleEl = document.getElementById('dynamicSubCSS');
+  if(!styleEl){ styleEl=document.createElement('style'); styleEl.id='dynamicSubCSS'; document.head.appendChild(styleEl); }
+  const rules = Object.entries(SUBS).map(([key,s])=>{
+    const hexIdx = SUB_COLORS.indexOf(s.color);
+    const hex = hexIdx>=0 ? SUB_COLOR_HEX[hexIdx] : s.color.replace('var(--','').replace(')','');
+    // We use inline style overrides; just define the tag class
+    return `.${key}-tag{background:rgba(128,128,128,.12);color:${s.color}}`;
+  }).join('\n');
+  styleEl.textContent = rules;
 }
 
-function closeSGApp() {
-  document.getElementById('sgOverlay').classList.remove('active');
-  document.body.style.overflow = '';
+function renderSubTabs(selector, keys, fn, activeKey, isMarks=false){
+  let target;
+  if(selector.includes('page-home')) target = document.querySelector('#page-home .sub-tabs');
+  else if(selector.includes('page-marks')) target = document.querySelector('#page-marks .marks-sub-tabs');
+  else if(selector.includes('page-flash')) target = document.querySelector('#page-flash .sub-tabs');
+  if(!target) return;
+  const subColorClass = ['chem','phys','math','sub4','sub5'];
+  target.style.gridTemplateColumns = keys.length <= 3
+    ? `repeat(${keys.length},1fr)`
+    : `repeat(${keys.length},1fr)`;
+  target.innerHTML = keys.map((k,i)=>{
+    const s = SUBS[k];
+    const cls = subColorClass[i] || 'chem';
+    const active = k===activeKey ? ' active' : '';
+    return `<div class="sub-tab ${cls}${active}" onclick="${fn}('${k}',this)" style="--sc:${s.color}">
+      <div class="sub-icon">${s.icon}</div>
+      <div class="sub-name">${s.name}</div>
+      ${fn==='selectSub'?`<div class="sub-time" id="${k}Time">0m</div>`:''}
+    </div>`;
+  }).join('');
 }
 
-// ═══════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════
-async function init() {
-  await loadFromStorage();
-  document.getElementById('dateInfo').textContent = 'STARTED: ' + start + ' · 45-DAY INTENSIVE';
-  
-  const badge = document.getElementById('syncBadge');
-  badge.className = 'sync-status sync-ok';
-  badge.innerHTML = '✓ SYNCED — CROSS-DEVICE';
-  
-  document.getElementById('loadingOverlay').style.display = 'none';
-  build();
-  
-  setTimeout(() => {
-    const t = document.querySelector('.today-card');
-    if (t) t.scrollIntoView({behavior:'smooth', block:'center'});
-  }, 300);
+function renderSubTabsInline(contextId, keys, fn, activeKey){
+  // Find the flex div containing sub-tabs inside the given context element
+  const ctx = document.getElementById(contextId);
+  if(!ctx) return;
+  // Find first div that directly contains sub-tab children
+  const flexDivs = ctx.querySelectorAll('div');
+  let container = null;
+  for(const div of flexDivs){
+    if(div.querySelector(':scope > .sub-tab')){
+      container = div;
+      break;
+    }
+  }
+  if(!container) return;
+  container.innerHTML = keys.map((k)=>{
+    const s = SUBS[k];
+    const active = k===activeKey ? ' active' : '';
+    const shortName = s.name.length > 6 ? s.name.slice(0,6) : s.name;
+    return `<div class="sub-tab${active}" onclick="${fn}('${k}',this)" style="--sc:${s.color};flex:1;padding:8px;border-radius:8px;text-align:center;font-size:11px;font-weight:700">${s.icon} ${shortName}</div>`;
+  }).join('');
 }
 
-init();
+function renderSubBreakdownBars(keys){
+  // Find the subject time breakdown card by looking for chemBar element's ancestor card
+  const chemBar = document.getElementById('chemBar');
+  if(!chemBar) return;
+  const subCard = chemBar.closest('.card');
+  if(!subCard) return;
+  const lbl = subCard.querySelector('.sec-lbl');
+  const lblHTML = lbl ? lbl.outerHTML : '<div class="sec-lbl">// time per subject</div>';
+  subCard.innerHTML = lblHTML + keys.map(k=>{
+    const s = SUBS[k];
+    return `<div class="sub-row">
+      <div class="sub-icon-sm">${s.icon}</div>
+      <div class="sub-nm" style="color:${s.color}">${s.name}</div>
+      <div class="sub-bw"><div class="sub-bf" id="${k}Bar" style="background:${s.color}"></div></div>
+      <div class="sub-tm" id="${k}BarT">0m</div>
+    </div>`;
+  }).join('');
+}
+
+function renderTodoFilters(keys){
+  const container = document.querySelector('#page-tools .card');
+  if(!container) return;
+  const filterRow = container.querySelector('[id^="todoF_all"]')?.parentElement;
+  if(!filterRow) return;
+  filterRow.innerHTML = `<button onclick="filterTodos('all')" id="todoF_all" class="ctrl-btn go" style="flex:none;padding:5px 10px;font-size:10px">All</button>`
+    + keys.map(k=>`<button onclick="filterTodos('${k}')" id="todoF_${k}" class="ctrl-btn" style="flex:none;padding:5px 10px;font-size:10px;color:${SUBS[k].color}">${SUBS[k].icon} ${SUBS[k].name.slice(0,5)}</button>`).join('');
+}
+
+// Override updateBreakdown to use dynamic SUBS
+const _origUpdateBreakdown = updateBreakdown;
+function updateBreakdown(){
+  const keys = Object.keys(SUBS);
+  const total = keys.reduce((s,k)=>(S.subTime[k]||0)+s,0) || 1;
+  keys.forEach(k=>{
+    const mins = Math.floor((S.subTime[k]||0)/60);
+    const pct = ((S.subTime[k]||0)/total*100).toFixed(1);
+    const bar = document.getElementById(k+'Bar');
+    const barT = document.getElementById(k+'BarT');
+    const timeEl = document.getElementById(k+'Time');
+    if(bar) bar.style.width = pct+'%';
+    if(barT) barT.textContent = mins+'m';
+    if(timeEl) timeEl.textContent = mins+'m';
+  });
+  document.getElementById('sTotalT').textContent = Math.floor(S.elapsedSec/60)+'m';
+  document.getElementById('ltTime').textContent = Math.floor(S.elapsedSec/60)+'m';
+}
+
+// Patch showPage to open subject manager when settings is shown
+// (without redefining the function, we patch the nav onclick calls via a wrapper)
+const _origShowPageFn = showPage;
+window.showPage = function(id, btn){
+  _origShowPageFn(id, btn);
+  if(id === 'settings') subManagerOpen();
+};
+
+// Run on load - only load saved subjects, patch state, DO NOT re-render HTML tabs
+loadSUBS();
+// Patch subTime to have all current subject keys
+Object.keys(SUBS).forEach(k=>{ if(!S.subTime[k]) S.subTime[k]=0; });
+if(!SUBS[S.currentSub]) S.currentSub = Object.keys(SUBS)[0];
+if(!SUBS[S.noteSub]) S.noteSub = Object.keys(SUBS)[0];
+if(!SUBS[S.fcSub]) S.fcSub = Object.keys(SUBS)[0];
+injectSubjectCSS();
+// Only re-render if subjects have been customized (differ from defaults)
+(function(){
+  const saved = lsGet(LS_SUBS, null);
+  if(saved) {
+    // Subjects were customized — update all UI to match
+    renderAllSubjectUI();
+  }
+  subManagerOpen();
+})();
+
 </script>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     SUPABASE AUTH + CLOUD SYNC
+═══════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  // ── CONFIG ────────────────────────────────────────────────────
+  const SUPABASE_URL  = 'https://xmxghzuivtbzqztsxjzg.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhteGdoenVpdnRienF6dHN4anpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMzA0NzcsImV4cCI6MjA5NTkwNjQ3N30.ZOXKqhsx_Uc1vO3Jde_mVVozYGuE0jTsYtWCL-MRK8Q';
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  window._sb = sb;
+
+  // ── STATE ─────────────────────────────────────────────────────
+  let currentUser = null;
+  let syncTimer   = null;
+  let pendingSync = false;
+  let lastSyncedAt = null;
+
+  // ── AUTH TAB SWITCHER ─────────────────────────────────────────
+  window.switchAuthTab = function(tab, el){
+    document.getElementById('authLoginForm').style.display  = tab==='login'  ? '' : 'none';
+    document.getElementById('authSignupForm').style.display = tab==='signup' ? '' : 'none';
+    document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('loginMsg').textContent  = '';
+    document.getElementById('signupMsg').textContent = '';
+  };
+
+  // ── LOGIN ─────────────────────────────────────────────────────
+  window.doLogin = async function(){
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPass').value;
+    const msg   = document.getElementById('loginMsg');
+    const btn   = document.getElementById('loginBtn');
+    if(!email||!pass){msg.textContent='Please fill in all fields.';return;}
+    btn.disabled=true; btn.textContent='Signing in…';
+    msg.textContent=''; msg.className='auth-err';
+    const {error} = await sb.auth.signInWithPassword({email,password:pass});
+    if(error){
+      msg.textContent = friendlyError(error.message);
+      btn.disabled=false; btn.textContent='Sign In →';
+    }
+    // on success, onAuthStateChange fires → handleUser()
+  };
+
+  // ── SIGN UP ───────────────────────────────────────────────────
+  window.doSignup = async function(){
+    const name  = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const pass  = document.getElementById('signupPass').value;
+    const pass2 = document.getElementById('signupPass2').value;
+    const msg   = document.getElementById('signupMsg');
+    const btn   = document.getElementById('signupBtn');
+    msg.textContent=''; msg.className='auth-err';
+    if(!name||!email||!pass||!pass2){msg.textContent='Please fill in all fields.';return;}
+    if(pass.length<8){msg.textContent='Password must be at least 8 characters.';return;}
+    if(pass!==pass2){msg.textContent='Passwords do not match.';return;}
+    btn.disabled=true; btn.textContent='Creating account…';
+    const {error} = await sb.auth.signUp({
+      email, password:pass,
+      options:{data:{display_name:name}}
+    });
+    if(error){
+      msg.textContent = friendlyError(error.message);
+      btn.disabled=false; btn.textContent='Create Account →';
+    } else {
+      msg.className='auth-ok';
+      msg.textContent='✓ Account created! Check your email to confirm, then sign in.';
+      btn.disabled=false; btn.textContent='Create Account →';
+      // Switch to login tab after short delay
+      setTimeout(()=>{
+        switchAuthTab('login', document.getElementById('tabLogin'));
+        document.getElementById('loginEmail').value = email;
+      }, 2000);
+    }
+  };
+
+  // ── GOOGLE LOGIN ──────────────────────────────────────────────
+  window.doGoogleLogin = async function(){
+    const btn = document.querySelector('.auth-google');
+    if(btn){ btn.disabled=true; btn.textContent='Opening Google…'; }
+    try{
+      const {data, error} = await sb.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.href.split('?')[0].split('#')[0],
+          queryParams: { prompt: 'select_account' }
+        }
+      });
+      if(error){
+        alert('Google login error: ' + error.message);
+        if(btn){ btn.disabled=false; btn.innerHTML='<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg> Continue with Google'; }
+      }
+      // If no error, browser will redirect automatically — no code needed here
+    } catch(e){
+      alert('Google login failed: ' + e.message);
+      if(btn){ btn.disabled=false; btn.textContent='Continue with Google'; }
+    }
+  };
+
+  // ── FORGOT PASSWORD ───────────────────────────────────────────
+  window.doForgotPassword = async function(){
+    const email = document.getElementById('loginEmail').value.trim();
+    const msg   = document.getElementById('loginMsg');
+    if(!email){msg.textContent='Enter your email above first.';return;}
+    msg.className='auth-err'; msg.textContent='Sending…';
+    const {error} = await sb.auth.resetPasswordForEmail(email,{
+      redirectTo: window.location.origin + window.location.pathname + '?reset=1'
+    });
+    msg.className = error ? 'auth-err' : 'auth-ok';
+    msg.textContent = error ? friendlyError(error.message) : '✓ Reset link sent! Check your email.';
+  };
+
+  // ── SIGN OUT ──────────────────────────────────────────────────
+  window.doSignOut = async function(){
+    if(!confirm('Sign out? Your data is safely saved in the cloud.')) return;
+    await syncToCloud();   // final save
+    await sb.auth.signOut();
+    currentUser = null;
+    showAuthScreen();
+  };
+
+  // ── USER MENU ─────────────────────────────────────────────────
+  window.showUserMenu = function(){
+    showPage('settings', document.querySelector('[onclick*="settings"]'));
+  };
+
+  // ── HANDLE AUTHENTICATED USER ─────────────────────────────────
+  async function handleUser(user){
+    currentUser = user;
+    const name = user.user_metadata?.display_name || user.email.split('@')[0];
+
+    // Update user pill
+    const pill = document.getElementById('userPill');
+    pill.style.display = 'flex';
+    document.getElementById('upAvatar').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('upName').textContent   = name;
+
+    // Update settings account info
+    const ai = document.getElementById('accountInfo');
+    if(ai) ai.innerHTML =
+      `Signed in as <b style="color:var(--chem)">${user.email}</b><br>` +
+      `<span style="color:var(--muted)">User ID: ${user.id.slice(0,8)}…</span>`;
+
+    // Load cloud data → merge into app
+    setSyncStatus('syncing','Loading…');
+    await loadFromCloud();
+    setSyncStatus('synced','Synced');
+
+    // Hide auth screen, show app
+    hideAuthScreen();
+
+    // Auto-sync every 60 seconds
+    clearInterval(syncTimer);
+    syncTimer = setInterval(()=>{if(pendingSync)syncToCloud();}, 60000);
+  }
+
+  // ── LOAD DATA FROM CLOUD → MERGE INTO APP ─────────────────────
+  async function loadFromCloud(){
+    try{
+      const {data,error} = await sb
+        .from('user_data')
+        .select('data')
+        .eq('user_id', currentUser.id)
+        .single();
+
+      if(error && error.code==='PGRST116'){
+        // No row yet — first login, push local data up
+        await syncToCloud();
+        return;
+      }
+      if(error) throw error;
+
+      const cloud = data.data || {};
+
+      // Merge: cloud wins over defaults, but keep timers/intervals reset
+      if(cloud.state){
+        const merged = Object.assign({}, DEFAULT_S, lsGet(LS_KEY,{}), cloud.state);
+        merged.running=false; merged.paused=false;
+        merged.tickId=null; merged.sessId=null;
+        merged.pomRunning=false; merged.pomId=null; merged.pomBreakId=null;
+        // Write back to localStorage so app picks it up
+        lsSet(LS_KEY, merged);
+        Object.assign(S, merged);
+      }
+      if(cloud.marks)   { MARKS = cloud.marks;        lsSet(LS_MARKS,   MARKS); }
+      if(cloud.cards)   { CUSTOM_CARDS = cloud.cards; lsSet(LS_CARDS,   CUSTOM_CARDS); }
+      if(cloud.srs)     { SRS_DATA = cloud.srs;        lsSet(LS_SRS,     SRS_DATA); }
+      if(cloud.reports) { lsSet(LS_REPORTS, cloud.reports); }
+      if(cloud.subs)    { lsSet('studyguard_subs_v5', cloud.subs); }
+      if(cloud.tt)      {
+        try{
+          const ttKeys = Object.keys(cloud.tt);
+          ttKeys.forEach(k=>localStorage.setItem(k, JSON.stringify(cloud.tt[k])));
+        }catch(e){}
+      }
+
+      // Re-render UI with fresh data
+      refreshUIAfterLoad();
+      lastSyncedAt = new Date();
+    }catch(e){
+      console.warn('Cloud load failed:', e);
+      setSyncStatus('offline','Offline');
+    }
+  }
+
+  // ── SYNC LOCAL DATA → CLOUD ────────────────────────────────────
+  window.syncToCloud = async function(){
+    if(!currentUser){ pendingSync=true; return; }
+    setSyncStatus('syncing','Syncing…');
+    try{
+      // Gather all timetable localStorage keys
+      const tt = {};
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(k && k.startsWith('sg_tt_')){
+          try{ tt[k]=JSON.parse(localStorage.getItem(k)); }catch(e){}
+        }
+      }
+
+      const payload = {
+        user_id: currentUser.id,
+        updated_at: new Date().toISOString(),
+        data: {
+          state:   lsGet(LS_KEY, {}),
+          marks:   lsGet(LS_MARKS, {}),
+          cards:   lsGet(LS_CARDS, {}),
+          srs:     lsGet(LS_SRS, {}),
+          reports: lsGet(LS_REPORTS, []),
+          subs:    lsGet('studyguard_subs_v5', null),
+          tt
+        }
+      };
+
+      const {error} = await sb.from('user_data').upsert(payload, {onConflict:'user_id'});
+      if(error) throw error;
+
+      pendingSync = false;
+      lastSyncedAt = new Date();
+      const mins = 'just now';
+      setSyncStatus('synced', mins);
+      document.getElementById('upSync').textContent = 'synced';
+    }catch(e){
+      console.warn('Sync failed:', e);
+      setSyncStatus('offline','Sync failed');
+      pendingSync = true;
+    }
+  };
+
+  // ── SYNC NOW BUTTON ────────────────────────────────────────────
+  window.syncNow = async function(){
+    if(!currentUser){toast('Not signed in','bad');return;}
+    await syncToCloud();
+    toast('☁ Data synced to cloud!','ok');
+  };
+
+  // ── PATCH SAVESTATE TO MARK PENDING SYNC ──────────────────────
+  const _origSaveState = window.saveState;
+  window.saveState = function(){
+    if(_origSaveState) _origSaveState();
+    pendingSync = true;
+    setSyncStatus('syncing','Pending…');
+    // Debounce: sync 5s after last save
+    clearTimeout(window._syncDebounce);
+    window._syncDebounce = setTimeout(()=>{
+      if(currentUser && pendingSync) syncToCloud();
+    }, 5000);
+  };
+
+  // ── ALSO PATCH lsSet TO CAPTURE MARKS/CARDS/SRS CHANGES ──────
+  const _origLsSet = window.lsSet;
+  window.lsSet = function(key, val){
+    _origLsSet(key, val);
+    pendingSync = true;
+    clearTimeout(window._syncDebounce);
+    window._syncDebounce = setTimeout(()=>{
+      if(currentUser && pendingSync) syncToCloud();
+    }, 5000);
+  };
+
+  // ── REFRESH UI AFTER LOADING CLOUD DATA ───────────────────────
+  function refreshUIAfterLoad(){
+    try{
+      // Re-run the same init logic the app uses
+      updateLevel();
+      updateBreakdown();
+      updateGoalBar();
+      renderMarksPage();
+      renderTodos();
+      rotateMoti();
+      initHeatmap();
+      checkAchievements();
+      renderReports();
+      // Subjects
+      const saved = lsGet('studyguard_subs_v5', null);
+      if(saved) renderAllSubjectUI();
+      injectSubjectCSS();
+      Object.keys(SUBS).forEach(k=>{if(!S.subTime[k])S.subTime[k]=0;});
+    }catch(e){
+      // Non-critical; app still works
+    }
+  }
+
+  // ── SYNC STATUS ────────────────────────────────────────────────
+  function setSyncStatus(state, label){
+    const dot  = document.getElementById('syncDot');
+    const sync = document.getElementById('upSync');
+    if(dot){dot.className='sync-dot '+state;}
+    if(sync){sync.textContent = label;}
+  }
+
+  // ── SHOW/HIDE AUTH SCREEN ──────────────────────────────────────
+  function showAuthScreen(){
+    document.getElementById('authScreen').classList.remove('hidden');
+    document.getElementById('userPill').style.display = 'none';
+    document.getElementById('authLoading').style.display = 'none';
+    document.getElementById('authForms').style.display   = '';
+  }
+
+  function hideAuthScreen(){
+    document.getElementById('authScreen').classList.add('hidden');
+  }
+
+  // ── FRIENDLY ERROR MESSAGES ────────────────────────────────────
+  function friendlyError(msg){
+    if(msg.includes('Invalid login'))    return 'Wrong email or password.';
+    if(msg.includes('Email not confirmed')) return 'Please confirm your email first.';
+    if(msg.includes('User already registered')) return 'An account with this email already exists.';
+    if(msg.includes('Password should'))  return 'Password must be at least 8 characters.';
+    if(msg.includes('rate limit'))       return 'Too many attempts. Please wait a minute.';
+    return msg;
+  }
+
+  // ── LISTEN FOR AUTH STATE CHANGES ─────────────────────────────
+  sb.auth.onAuthStateChange(async (event, session)=>{
+    if(event==='SIGNED_IN' && session?.user){
+      await handleUser(session.user);
+    } else if(event==='SIGNED_OUT'){
+      currentUser = null;
+      clearInterval(syncTimer);
+      showAuthScreen();
+    } else if(event==='PASSWORD_RECOVERY'){
+      // handled by redirect
+    }
+  });
+
+  // ── INITIAL SESSION CHECK ──────────────────────────────────────
+  (async function init(){
+    // Safety timeout — if Supabase takes >5s, just show login
+    const timeout = setTimeout(()=>{
+      document.getElementById('authLoading').style.display = 'none';
+      document.getElementById('authForms').style.display   = '';
+    }, 5000);
+
+    try{
+      const {data, error} = await sb.auth.getSession();
+      clearTimeout(timeout);
+      if(data?.session?.user){
+        await handleUser(data.session.user);
+      } else {
+        document.getElementById('authLoading').style.display = 'none';
+        document.getElementById('authForms').style.display   = '';
+      }
+    } catch(e){
+      clearTimeout(timeout);
+      console.warn('Session check failed:', e);
+      document.getElementById('authLoading').style.display = 'none';
+      document.getElementById('authForms').style.display   = '';
+    }
+  })();
+
+  // ── SYNC ON PAGE UNLOAD ────────────────────────────────────────
+  window.addEventListener('beforeunload', ()=>{
+    if(currentUser && pendingSync){
+      // Best-effort beacon sync
+      const payload = JSON.stringify({
+        user_id: currentUser.id,
+        updated_at: new Date().toISOString(),
+        data:{
+          state:lsGet(LS_KEY,{}),
+          marks:lsGet(LS_MARKS,{}),
+          cards:lsGet(LS_CARDS,{}),
+          srs:lsGet(LS_SRS,{}),
+          reports:lsGet(LS_REPORTS,[])
+        }
+      });
+      navigator.sendBeacon &&
+        navigator.sendBeacon(
+          SUPABASE_URL+'/rest/v1/user_data',
+          new Blob([payload],{type:'application/json'})
+        );
+    }
+  });
+
+  // ── SYNC ON VISIBILITY CHANGE (tab comes back) ─────────────────
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState==='visible' && currentUser && pendingSync){
+      syncToCloud();
+    }
+  });
+
+})();
+</script>
 </body>
 </html>
