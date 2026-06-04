@@ -1086,7 +1086,7 @@ body::after{content:'';position:fixed;inset:0;
   <button class="nav-tab" onclick="showPage('reports',this)"><span class="nav-icon">📋</span>Reports</button>
   <button class="nav-tab" onclick="showPage('marks',this)"><span class="nav-icon">📝</span>Marks</button>
   <button class="nav-tab" onclick="showPage('flash',this)"><span class="nav-icon">🃏</span>Cards</button>
-  <button class="nav-tab" onclick="showPage('coach',this)"><span class="nav-icon">✦</span>Coach</button>
+  <button class="nav-tab" onclick="showPage('coach',this)"><span class="nav-icon">📅</span>Planner</button>
   <button class="nav-tab" onclick="showPage('tools',this)"><span class="nav-icon">🛠</span>Tools</button>
   <button class="nav-tab" onclick="showPage('timetable',this)"><span class="nav-icon">🗓</span>Day</button>
   <button class="nav-tab" onclick="showPage('settings',this)"><span class="nav-icon">⚙️</span>Settings</button>
@@ -1474,31 +1474,124 @@ body::after{content:'';position:fixed;inset:0;
   </div>
 </div>
 
-<!-- PAGE: AI COACH -->
+<!-- PAGE: 45-DAY REVISION PLANNER -->
 <div class="page" id="page-coach">
-  <div class="brand"><div><div class="brand-name">✦ <span>AI Coach</span></div>
-  <div class="brand-tag">// personalised study analysis</div></div>
-  <div><span id="aiKeyStatusBadge" class="ai-key-status unset" onclick="openAPIModal()">⚡ Set API Key</span></div>
-  </div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-    <button class="ai-btn" onclick="coachAsk('overview')" style="flex:1;min-width:120px;justify-content:center;font-size:11px">📊 Session Overview</button>
-    <button class="ai-btn" onclick="coachAsk('weakness')" style="flex:1;min-width:120px;justify-content:center;font-size:11px">🎯 Weak Areas</button>
-    <button class="ai-btn" onclick="coachAsk('marks')" style="flex:1;min-width:120px;justify-content:center;font-size:11px">📈 Marks Analysis</button>
-    <button class="ai-btn" onclick="coachAsk('plan')" style="flex:1;min-width:120px;justify-content:center;font-size:11px">📅 Study Plan</button>
-    <button class="ai-btn" onclick="coachAsk('motivation')" style="flex:1;min-width:120px;justify-content:center;font-size:11px">🔥 Motivate Me</button>
-    <button class="ai-btn" onclick="coachAsk('explain')" style="flex:1;min-width:120px;justify-content:center;font-size:11px">❓ Ask Anything</button>
-  </div>
-  <!-- Custom question input -->
-  <div class="card" style="padding:12px 14px;margin-bottom:14px" id="coachAskCard" style="display:none">
-    <input id="coachCustomQ" class="custom-card-inp" style="resize:none;height:auto;margin-bottom:8px" placeholder="Ask your AI coach anything about your studies...">
-    <button class="ai-btn" style="width:100%;justify-content:center" onclick="coachAskCustom()">Send ✦</button>
-  </div>
-  <div id="coachOutput">
-    <div style="text-align:center;padding:40px 20px">
-      <div style="font-size:40px;margin-bottom:12px">✦</div>
-      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.8">Your AI coach analyses your study data — time per subject, marks trends, check-in accuracy, and flashcard performance — to give personalised advice.<br><br>Tap a button above to get started.</div>
+
+  <!-- Planner-specific styles scoped inside the page -->
+  <style>
+    #page-coach .pl-header{margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+    #page-coach .pl-hdr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+    #page-coach .pl-title{font-family:var(--mono);font-size:22px;font-weight:800;letter-spacing:-0.5px;color:var(--text);line-height:1.1;}
+    #page-coach .pl-title em{color:var(--warn);font-style:normal;}
+    #page-coach .pl-sub{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:4px;letter-spacing:2px;text-transform:uppercase;}
+    #page-coach .pl-ring-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;}
+    #page-coach .pl-ring-wrap svg{width:68px;height:68px;}
+    #page-coach .pl-ring-pct{font-family:var(--mono);font-size:9px;color:var(--muted);}
+
+    #page-coach .pl-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+    #page-coach .pl-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center;}
+    #page-coach .pl-stat-v{font-family:var(--mono);font-size:18px;font-weight:800;line-height:1;}
+    #page-coach .pl-stat-l{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px;}
+
+    #page-coach .pl-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+    #page-coach .pl-li{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;color:var(--muted);}
+    #page-coach .pl-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0;}
+
+    #page-coach .pl-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+    #page-coach .pl-fb{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:9px;cursor:pointer;transition:all 0.15s;letter-spacing:1px;text-transform:uppercase;}
+    #page-coach .pl-fb:hover{border-color:var(--text);color:var(--text);}
+    #page-coach .pl-fb.active{color:#05050e;font-weight:700;border-color:transparent;}
+    #page-coach .pl-fb.fall.active{background:var(--text);}
+    #page-coach .pl-fb.fph.active{background:#00e5ff;color:#000;}
+    #page-coach .pl-fb.fch.active{background:#ff5733;color:#fff;}
+    #page-coach .pl-fb.fma.active{background:#a3e635;color:#000;}
+
+    #page-coach .pl-grid{display:flex;flex-direction:column;gap:8px;}
+
+    #page-coach .pl-day{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;position:relative;overflow:hidden;transition:border-color .2s;}
+    #page-coach .pl-day:hover{border-color:var(--border-lit,#2e3e4e);}
+    #page-coach .pl-day.today-card{border-color:var(--warn);box-shadow:0 0 16px rgba(255,194,51,.1);}
+    #page-coach .pl-day.done-card{opacity:0.45;}
+    #page-coach .pl-day.done-card .pl-cbtn{background:var(--success);border-color:var(--success);color:#fff;}
+    #page-coach .pl-day.rev-card{border-color:rgba(255,194,51,.25);}
+
+    #page-coach .pl-accent{position:absolute;top:0;left:0;right:0;height:2px;}
+    #page-coach .pl-acc-n{background:linear-gradient(90deg,#00e5ff,#a3e635);}
+    #page-coach .pl-acc-r{background:var(--warn);}
+
+    #page-coach .pl-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    #page-coach .pl-day-lbl{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:2px;display:flex;align-items:center;gap:6px;}
+    #page-coach .pl-rev-tag{font-size:8px;background:rgba(255,194,51,.15);color:var(--warn);padding:1px 5px;border-radius:3px;letter-spacing:1px;}
+    #page-coach .pl-today-badge{font-size:8px;background:var(--warn);color:#000;padding:2px 6px;border-radius:4px;font-weight:800;font-family:var(--mono);}
+    #page-coach .pl-head-right{display:flex;align-items:center;gap:6px;}
+    #page-coach .pl-cbtn{width:22px;height:22px;border-radius:5px;border:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .15s;color:transparent;}
+    #page-coach .pl-cbtn:hover{border-color:var(--success);color:var(--success);}
+
+    #page-coach .pl-topics{display:flex;flex-direction:column;gap:5px;}
+    #page-coach .pl-tr{display:flex;align-items:flex-start;gap:6px;padding:6px 8px;border-radius:8px;font-size:11px;line-height:1.5;}
+    #page-coach .pl-tr.ph{background:rgba(0,229,255,.07);}
+    #page-coach .pl-tr.ch{background:rgba(255,87,51,.07);}
+    #page-coach .pl-tr.ma{background:rgba(163,230,53,.07);}
+    #page-coach .pl-tlbl{font-family:var(--mono);font-size:8px;font-weight:800;padding:1px 4px;border-radius:3px;flex-shrink:0;margin-top:2px;}
+    #page-coach .pl-tr.ph .pl-tlbl{background:#00e5ff;color:#000;}
+    #page-coach .pl-tr.ch .pl-tlbl{background:#ff5733;color:#fff;}
+    #page-coach .pl-tr.ma .pl-tlbl{background:#a3e635;color:#000;}
+    #page-coach .pl-topic-text{flex:1;color:var(--text);}
+    #page-coach .pl-pri{font-family:var(--mono);font-size:8px;padding:1px 4px;border-radius:3px;font-weight:700;flex-shrink:0;margin-top:2px;}
+    #page-coach .pl-pri-h{background:#ef4444;color:#fff;}
+    #page-coach .pl-pri-m{background:#f59e0b;color:#000;}
+    #page-coach .pl-hidden{display:none!important;}
+  </style>
+
+  <!-- Header -->
+  <div class="pl-header">
+    <div class="pl-hdr-top">
+      <div>
+        <div class="pl-title">45-DAY <em>A/L</em> BLITZ</div>
+        <div class="pl-sub" id="plDateInfo">PHYSICS · CHEMISTRY · COMBINED MATHS</div>
+      </div>
+      <div class="pl-ring-wrap">
+        <svg viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(34,34,58,0.8)" stroke-width="5"/>
+          <circle id="plRing" cx="40" cy="40" r="32" fill="none" stroke="var(--warn)" stroke-width="5"
+            stroke-dasharray="201.1" stroke-dashoffset="201.1"
+            stroke-linecap="round" transform="rotate(-90 40 40)" style="transition:stroke-dashoffset .7s"/>
+        </svg>
+        <div class="pl-ring-pct" id="plPct">0% DONE</div>
+      </div>
     </div>
   </div>
+
+  <!-- Stats row -->
+  <div class="pl-stats">
+    <div class="pl-stat"><div class="pl-stat-v" style="color:var(--warn)" id="plSToday">1</div><div class="pl-stat-l">Today</div></div>
+    <div class="pl-stat"><div class="pl-stat-v" style="color:var(--success)" id="plSDone">0</div><div class="pl-stat-l">Done</div></div>
+    <div class="pl-stat"><div class="pl-stat-v" style="color:var(--info)" id="plSLeft">45</div><div class="pl-stat-l">Left</div></div>
+    <div class="pl-stat"><div class="pl-stat-v" id="plSStreak">🔥0</div><div class="pl-stat-l">Streak</div></div>
+  </div>
+
+  <!-- Legend -->
+  <div class="pl-legend">
+    <div class="pl-li"><div class="pl-dot" style="background:#00e5ff"></div>Physics</div>
+    <div class="pl-li"><div class="pl-dot" style="background:#ff5733"></div>Chemistry</div>
+    <div class="pl-li"><div class="pl-dot" style="background:#a3e635"></div>Maths</div>
+    <div class="pl-li"><span class="pl-pri pl-pri-h">HIGH</span></div>
+    <div class="pl-li"><span class="pl-pri pl-pri-m">MED</span></div>
+  </div>
+
+  <!-- Filters -->
+  <div class="pl-filters">
+    <button class="pl-fb fall active" onclick="plSetFilter('all',this)">All Days</button>
+    <button class="pl-fb fph" onclick="plSetFilter('ph',this)">Physics</button>
+    <button class="pl-fb fch" onclick="plSetFilter('ch',this)">Chemistry</button>
+    <button class="pl-fb fma" onclick="plSetFilter('ma',this)">Maths</button>
+    <button class="pl-fb fall" onclick="plSetFilter('todo',this)">To Do</button>
+    <button class="pl-fb fall" onclick="plSetFilter('done2',this)">Done ✓</button>
+  </div>
+
+  <!-- Day cards grid -->
+  <div class="pl-grid" id="plGrid"></div>
+
 </div>
 
 <!-- PAGE: TOOLS -->
@@ -4732,6 +4825,180 @@ injectSubjectCSS();
       syncToCloud();
     }
   });
+
+})();
+</script>
+
+<!-- ═══ 45-DAY REVISION PLANNER ══════════════════════════════════ -->
+<script>
+(function(){
+'use strict';
+
+const PL_PLAN=[
+{p:{t:"Newton's Laws — F=ma, momentum, impulse; conservation of linear momentum; collisions & explosions",pri:"H"},c:{t:"Chemical Equilibrium — Kc & Kp; Le Chatelier's principle; temperature, pressure & catalyst effects",pri:"H"},m:{t:"Quadratic Functions & Equations — completing the square; discriminant; sum/product of roots; nature of roots; symmetric functions of roots",pri:"H"}},
+{p:{t:"SHM — a=−ω²x; KE–PE interchange; simple pendulum T=2π√(l/g); mass-spring T=2π√(m/k); graphs",pri:"H"},c:{t:"Acid-Base Equilibrium — Kw, Ka, Kb; pH of acids/bases/salts; titration curves; indicator selection",pri:"H"},m:{t:"Trigonometric Identities — Pythagorean identities; compound angle formulae; double/triple/half-angle; product-sum; a·cosθ+b·sinθ=R·cos(θ−α)",pri:"H"}},
+{p:{t:"EM Induction — Faraday's & Lenz's laws; rotating coil EMF; AC generator; RMS & peak; transformers",pri:"H"},c:{t:"Chemical Kinetics — rate law; orders & units of k; half-life; initial rate method; rate-determining step",pri:"H"},m:{t:"Differentiation — first principles; product/quotient/chain rules; implicit & parametric; inverse trig derivatives; higher-order derivatives",pri:"H"}},
+{p:{t:"Electric Field & Capacitance — Coulomb's law; Gauss's theorem; V=kQ/r; C=ε₀A/d; series/parallel; W=½CV²",pri:"H"},c:{t:"Energetics — Hess's law; enthalpy of formation/combustion/bond energy; Born-Haber cycle & lattice enthalpy",pri:"H"},m:{t:"Applications of Differentiation — stationary points; max/min (1st & 2nd derivative tests); curve sketching with asymptotes; optimisation problems",pri:"H"}},
+{p:{t:"Thermal Physics — gas laws; pV=nRT; kinetic theory; mean KE=3/2 kT; Maxwell-Boltzmann distribution",pri:"H"},c:{t:"Alkenes, Alkynes & Benzene — electrophilic addition (Markovnikov); electrophilic substitution (nitration, halogenation, Friedel-Crafts); directing groups",pri:"H"},m:{t:"Integration — indefinite & definite integrals; theorems; f'(x)/f(x) forms; partial fractions; trig identities in integration; substitution; integration by parts",pri:"H"}},
+{p:{t:"DC Circuits — Kirchhoff's laws; Wheatstone bridge; potentiometer; EMF & internal resistance; P=VI=I²R",pri:"H"},c:{t:"Alcohols, Aldehydes, Ketones & Carboxylic Acids — reactions, nucleophilic addition; oxidation tests; esterification; acid derivatives",pri:"H"},m:{t:"Integration Applications — area under curve; area between curves; volume of revolution (∫πy²dx); definite integral properties",pri:"H"}},
+{p:{t:"Waves — superposition; stationary waves (strings & pipes); interference; Doppler effect; resonance column",pri:"H"},c:{t:"s, p & d Block Elements — Na/Mg/Ca/N/S/halogen chemistry; anion identification; d-block oxidation states & complexes",pri:"H"},m:{t:"Vectors (CM-II) — triangle/parallelogram law; unit vectors; position vectors; scalar (dot) product; vector product; angle between vectors",pri:"H"}},
+{p:{t:"Work, Energy & Power — KE, GPE, elastic PE; work-energy principle; conservation of mechanical energy; power & efficiency",pri:"H"},c:{t:"Electrochemistry — standard electrode potential; SHE; E°cell; electrochemical series; electrolysis; Faraday constant",pri:"H"},m:{t:"Forces & Equilibrium (CM-II) — resultant of coplanar forces; resolution; Lami's theorem; triangle of forces; polygon of forces",pri:"H"}},
+{p:{t:"Magnetic Fields — F=BIl, F=Bqv; Biot-Savart; field near wire/coil/solenoid; torque on loop; Hall effect",pri:"H"},c:{t:"Buffers & Solubility Equilibria — Henderson equation; buffer pH; Ksp; common ion effect; cation group analysis",pri:"H"},m:{t:"Moments & Rigid Body Equilibrium (CM-II) — moment of a force; couple; reducing system to force+couple; conditions for equilibrium of rigid body",pri:"H"}},
+{p:{t:"Equilibrium — moments; two & three force equilibrium; stable/unstable/neutral; centre of gravity",pri:"H"},c:{t:"Atomic Structure & Periodic Trends — electron configurations (Z=1–54); quantum numbers; IE trends; atomic radius; electronegativity",pri:"H"},m:{t:"Newton's Laws & Dynamics (CM-II) — Newton's 1st/2nd/3rd laws; F=ma; connected bodies; pulleys & wedges; weight vs mass",pri:"H"}},
+{p:{t:"Matter & Radiation — photoelectric effect; de Broglie; radioactive decay law; half-life; nuclear binding energy; fission & fusion",pri:"H"},c:{t:"Bonding & Shape — Lewis structures; VSEPR; hybridisation sp/sp²/sp³; σ & π bonds; resonance; H-bonding",pri:"H"},m:{t:"Work, Energy & Power (CM-II) — work done by constant force; KE & PE; work-energy equation; conservation of mechanical energy; elastic PE (Hooke's law); power P=Fv",pri:"H"}},
+{p:{t:"Optics — Snell's law; critical angle & TIR; prism (min deviation); thin lens 1/v−1/u=1/f; eye defects; microscope & telescope",pri:"H"},c:{t:"Halohydrocarbons & Grignard — polar C-X bond; SN1 vs SN2; Grignard preparation & reactions",pri:"M"},m:{t:"Impulse, Momentum & Collisions (CM-II) — impulse I=Δ(mv); conservation of linear momentum; Newton's law of restitution; direct impact; loss of KE",pri:"H"}},
+{p:{t:"Rotational Motion — moment of inertia; τ=Iα; rotational KE; angular momentum; conservation of angular momentum",pri:"M"},c:{t:"Nitrogen Compounds — amine reactions; basicity; diazonium salt preparation & reactions (Sandmeyer & coupling)",pri:"M"},m:{t:"Circular Motion (CM-II) — angular velocity & acceleration; centripetal acceleration & force; conical pendulum; motion in vertical circle; energy conservation in circular motion",pri:"H"}},
+{p:{t:"Gravitational Field — Newton's law; g & V=−GM/r; orbital energy; satellites; geostationary orbit; escape velocity",pri:"M"},c:{t:"Entropy & Gibbs Energy — ΔG=ΔH−TΔS; spontaneity; standard ΔG°, ΔH°, ΔS° calculations; temperature crossover",pri:"M"},m:{t:"Simple Harmonic Motion (CM-II) — definition; ẍ=−ω²x; general solution; amplitude & period; SHM on horizontal & vertical line (springs/strings); SHM + free-fall combination",pri:"H"}},
+{p:{t:"Change of State & Vapour — latent heat; SVP; dew point; first law ΔU=Q−W; p-V diagrams; isothermal & adiabatic",pri:"M"},c:{t:"Gaseous State — KMT; Maxwell-Boltzmann curves; Dalton's law; van der Waals equation; compressibility",pri:"M"},m:{t:"Projectiles (CM-II) — horizontal & vertical components; equation of trajectory; max height; time of flight; range; two angles for same range; max range for given speed",pri:"H"}},
+{p:{t:"Sound — stationary waves in strings & tubes; sonometer; beats; intensity & dB; Doppler applications",pri:"M"},c:{t:"Chemical Calculations — mole, empirical/molecular formulae; balancing redox (oxidation numbers & half-equations); stoichiometry",pri:"M"},m:{t:"Relative Motion (CM-II) — relative displacement, velocity & acceleration; shortest distance; time of collision; path relative to another particle; use of vectors",pri:"M"}},
+{p:{t:"Semiconductors & Electronics — p-n junction; rectification; Zener; BJT; logic gates; op-amp; SR flip-flop",pri:"M"},c:{t:"d-Block Complexes & Reactions — CrO₄²⁻/Cr₂O₇²⁻/MnO₄⁻ as oxidants; IUPAC naming; reactions of transition metal ions",pri:"M"},m:{t:"Polynomials & Partial Fractions — remainder & factor theorems; synthetic division; solving degree ≤4 equations; resolving into partial fractions (distinct/repeated/quadratic factors)",pri:"M"}},
+{p:{t:"Current Electricity — drift velocity; resistivity; temperature coefficient; Ohm's law & I-V curves; superconductivity",pri:"M"},c:{t:"Basic Organic Chemistry — IUPAC nomenclature; functional groups; chain/positional/functional isomers; geometrical & optical isomerism",pri:"M"},m:{t:"Trigonometric Functions & Equations — graphs of sin/cos/tan; general solutions (sinθ=sinα etc.); inverse trig functions (domain/range/graphs); inverse trig problems",pri:"M"}},
+{p:{t:"Projectile Motion & Kinematics — equations of motion; v-t & s-t graphs; projectile range & max height; relative motion",pri:"M"},c:{t:"Phenols — higher acidity vs alcohols; ring activation; bromination & nitration at ortho/para; no SN reaction",pri:"M"},m:{t:"Straight Line & Coordinate Geometry — distance formula; section formula; various forms of line; angle between lines; perpendicular distance; bisectors; parametric form",pri:"M"}},
+{p:{t:"Damped & Forced Oscillations — free/damped/forced; resonance; Barton's pendulum; amplitude-frequency curves",pri:"M"},c:{t:"Phase Equilibria — vapour pressure; phase diagram of water; Raoult's law; fractional distillation; KD",pri:"M"},m:{t:"Circle — equation of circle; line-circle intersection; tangent at point & from external point; chord of contact; circle through intersection points S+λU=0; orthogonal circles",pri:"M"}},
+{p:{t:"Thermal Conduction & Radiation — thermal conductivity k; Searle's method; Stefan's law; Wien's law; black body radiation",pri:"M"},c:{t:"Industrial Chemistry — Haber, Ostwald, Contact, Solvay processes; NaOH membrane cell; blast furnace",pri:"M"},m:{t:"Limits & Continuity — basic limit theorems; lim(xⁿ−aⁿ)/(x−a)=naⁿ⁻¹; lim(sinx/x)=1; one-sided limits; limits at infinity; asymptotes; continuity at a point",pri:"M"}},
+{p:{t:"Measurement — SI units; dimensions; Vernier caliper & micrometer; errors; significant figures; vector resolution",pri:"M"},c:{t:"Polymers & Environmental Pollution — addition & condensation polymers; acid rain; smog; ozone depletion; global warming; eutrophication",pri:"M"},m:{t:"Inequalities — basic properties; linear, quadratic & rational inequalities (algebraic & graphical); modulus inequalities (linear only)",pri:"M"}},
+{p:{t:"Fluid Dynamics — continuity equation (Av=const); Bernoulli's principle & applications; viscosity; Stokes' law",pri:"M"},c:{t:"p-Block: Al, C, N — Al amphoteric; AlCl₃; graphite & diamond; CO/CO₂; oxides/oxoacids of N; HNO₃ reactions",pri:"M"},m:{t:"Complex Numbers — real/imaginary parts; algebraic operations; conjugate; modulus; Argand diagram; polar form; argument; De Moivre's theorem; loci",pri:"M"}},
+{p:{t:"Mechanical Properties — Hooke's law; stress/strain/Young modulus; surface tension; capillary rise; terminal velocity",pri:"M"},c:{t:"p-Block: O, S, Halogens — H₂SO₄/H₂O₂/H₂S/SO₂ reactions; Cl₂ reactions; disproportionation; noble gas fluorides",pri:"M"},m:{t:"Matrices — definitions; operations; transpose; 2×2 inverse; solving simultaneous equations; graphical interpretation of solution types",pri:"M"}},
+{p:{t:"Thermal Expansion — linear/area/volume expansivity; real & apparent expansion of liquids; anomalous water expansion",pri:"M"},c:{t:"Chemical Kinetics: Mechanisms & Catalysis — energy diagrams; transition states; elementary vs multistep; catalyst & activation energy",pri:"M"},m:{t:"Permutations & Combinations — n!, fundamental counting principle; ⁿPᵣ; cyclic permutations; ⁿCᵣ; distinguishing P vs C; applications",pri:"M"}},
+{p:{t:"REVISION: Newton's Laws + Momentum + Collisions + Equilibrium + Work-Energy — past paper MCQs & structured Qs",pri:"H"},c:{t:"REVISION: Equilibrium (Kc/Kp/Le Chatelier) + Acid-Base pH + Buffer (Henderson) — past paper questions",pri:"H"},m:{t:"REVISION: Quadratic equations + Differentiation + Integration (all methods) — past paper questions",pri:"H"}},
+{p:{t:"REVISION: SHM + Waves + Stationary Waves + Doppler + Optics — past paper structured Qs",pri:"H"},c:{t:"REVISION: Kinetics (rate law, order, half-life) + Energetics (Hess, Born-Haber, ΔG) — past paper Qs",pri:"H"},m:{t:"REVISION: Trigonometric identities + inverse trig + general solutions + CM-II Forces & Moments — past paper Qs",pri:"H"}},
+{p:{t:"EM Spectrum & LASER — EM wave properties; ranges & uses; LASER principle & applications",pri:"M"},c:{t:"Electrochemical Cells — cell notation; Daniel cell; EMF calculations; electrolysis products",pri:"M"},m:{t:"Series & Sequences — AP & GP sums; Σr, Σr², Σr³ formulae; method of differences; partial fractions for sums; convergence of infinite series",pri:"M"}},
+{p:{t:"Specific Heat & Latent Heat — SHC; method of mixtures; Newton's cooling; latent heat; pressure effects on melting/boiling",pri:"M"},c:{t:"s-Block Trends — solubility of hydroxides/carbonates/sulphates; thermal stability of nitrates/carbonates; flame tests",pri:"M"},m:{t:"Binomial Theorem — binomial coefficients; general term; proof by induction; relationships among coefficients; specific term problems",pri:"M"}},
+{p:{t:"Newton's Laws: Applications — connected bodies; lift problems; static/limiting/dynamic friction; free body diagrams",pri:"M"},c:{t:"Periodic Table & Trends — shielding, Zeff; IE variation; electron affinity; formation of ions",pri:"M"},m:{t:"Friction & Equilibrium of Rigid Bodies (CM-II) — laws of friction; limiting friction; angle of friction; coefficient μ; problems on inclined planes & horizontal surfaces",pri:"M"}},
+{p:{t:"EM Induction: Applications — eddy currents; back EMF; self-induction; AC circuits (qualitative); transmission efficiency",pri:"M"},c:{t:"Alkanes & Haloalkanes — free-radical substitution; mechanism of chlorination; homolytic cleavage; SN1 vs SN2 depth",pri:"M"},m:{t:"Frameworks & Jointed Rods (CM-II) — types of joints; forces at smooth joints; Bow's notation; stress diagrams; stress calculations in light frameworks",pri:"M"}},
+{p:{t:"Gauss's Theorem & Electric Potential — flux; field inside/outside sphere; infinite plate & wire; equipotentials; potential gradient",pri:"M"},c:{t:"Carboxylic Acids & Derivatives — acidity order; reactions with Na/NaOH/Na₂CO₃; acid chloride & ester nucleophilic substitution",pri:"M"},m:{t:"Centre of Mass (CM-II) — centre of mass of uniform bodies (rod, disc, ring, cylinder, sphere, cone, hemisphere); composite & remainder bodies; suspended bodies; stability",pri:"M"}},
+{p:{t:"Magnetic Field Applications — force between conductors; definition of ampere; DC motor; galvanometer; ammeter/voltmeter conversion",pri:"M"},c:{t:"Amines & Diazonium Salts — aliphatic vs aromatic amines; basicity trend; Sandmeyer & coupling reactions",pri:"M"},m:{t:"Probability (CM-II) — sample space; event types; classical/axiomatic definitions; addition rule; conditional probability; multiplication rule; independence; Bayes' theorem",pri:"M"}},
+{p:{t:"Gravitational Field: Satellites — orbital speed & period; geostationary orbit; gravitational PE & total energy; escape velocity derivation",pri:"M"},c:{t:"Real Gases & Compressibility — deviations from ideal; van der Waals corrections; compressibility factor Z; critical temperature",pri:"M"},m:{t:"Statistics (CM-II) — mean, median, mode (ungrouped & grouped); quartiles; percentiles; box plots; range; IQR; variance & SD; pooled mean/variance; z-score; skewness",pri:"M"}},
+{p:{t:"Semiconductor Devices — Zener regulation; LED & photodiode; solar cells; BJT common emitter; JFET; op-amp inverting/non-inverting",pri:"M"},c:{t:"Ionic Equilibrium: Ksp — Ksp calculations; predicting precipitation; common ion effect; qualitative cation analysis",pri:"M"},m:{t:"Mathematical Induction — principle of MI; proof of summation, divisibility & inequality results using PMI",pri:"M"}},
+{p:{t:"REVISION: EM Induction + DC Circuits (Kirchhoff, potentiometer) + Magnetic Fields — structured past paper Qs",pri:"H"},c:{t:"REVISION: Organic Mechanisms (electrophilic addition/substitution, nucleophilic addition/substitution) — past paper Qs",pri:"H"},m:{t:"REVISION: CM-II Dynamics — Newton's laws + projectiles + relative motion + impulse & momentum + collisions — past paper Qs",pri:"H"}},
+{p:{t:"REVISION: Electric Fields + Capacitance + Matter & Radiation (photoelectric, radioactivity, nuclear) — past paper Qs",pri:"H"},c:{t:"REVISION: Electrochemistry (cells, electrolysis, Faraday) + d-block & complex ions — past paper Qs",pri:"H"},m:{t:"REVISION: CM-II Mechanics — circular motion + SHM + centre of mass + frameworks + friction — past paper Qs",pri:"H"}},
+{p:{t:"Vectors & Measurement — parallelogram/polygon of forces; vector resolution; error analysis; dimensions",pri:"M"},c:{t:"Stoichiometry — limiting reagent; % yield; concentration; standard solution preparation; redox titration calculations",pri:"M"},m:{t:"Functions & Real Numbers — domain/codomain/range; one-one & onto; inverse & composite functions; graphs; modulus function; types of functions",pri:"M"}},
+{p:{t:"Circular Motion — centripetal acceleration & force; banked roads; conservation of angular momentum examples",pri:"M"},c:{t:"Plant-Based Industries & Polymers — ethanol/vinegar/biodiesel; steam distillation; PVC/nylon/polyester/Bakelite; vulcanisation",pri:"M"},m:{t:"Index & Logarithm Laws — index rules; log rules; change of base; solving exponential & log equations; derivatives of eˣ, ln x, aˣ; natural log function properties",pri:"M"}},
+{p:{t:"Elasticity & Surface Tension — Young modulus experiments; energy in stretched wire; Poiseuille; surface energy",pri:"M"},c:{t:"p-Block Trends Across Period 3 — acid/base nature of oxides/hydroxides; hydrolysis of halides; hydrides comparison",pri:"M"},m:{t:"Trigonometry: Sine & Cosine Rules — proof & applications; area of triangle; problems involving bearings & 3D geometry",pri:"M"}},
+{p:{t:"Diffraction & Polarisation — single-slit diffraction; Young's double-slit (λ=ax/D); polarisation by reflection; applications",pri:"M"},c:{t:"Conductivity & Electrode Types — strong/weak electrolytes; metal-ion/gas/redox electrodes; Ag/AgCl reference",pri:"M"},m:{t:"Geometry (Basic Course) — circle theorems; Pythagoras extensions (Apollonius); bisector theorem; similar triangles; incentre/circumcentre/orthocentre/centroid",pri:"M"}},
+{p:{t:"Convection & Radiation — Stefan's law; Wien's displacement law; greenhouse effect; Newton's cooling (qualitative)",pri:"M"},c:{t:"Energetics: ΔG & Spontaneity — sign analysis of ΔH/ΔS/ΔG; temperature crossover; energy cycles",pri:"M"},m:{t:"Algebra Review (Basic Course) — expansion & factorisation of a³±b³; algebraic fractions; simultaneous equations (up to 3 unknowns); indices & logs; properties of proportion",pri:"M"}},
+{p:{t:"FULL PHYSICS MOCK — complete past paper under timed conditions; analyse every error",pri:"H"},c:{t:"REVISION: Acid-Base + Buffer + Ksp + Phase Equilibria — mixed problem set",pri:"H"},m:{t:"REVISION: CM-I — Quadratics + Polynomials + Inequalities + Complex Numbers + Matrices + Probability + Statistics — mixed past paper Qs",pri:"H"}},
+{p:{t:"REVISION: Thermal Physics (gas laws, KE, SHC, latent heat) + Gravitation — mixed problem set",pri:"H"},c:{t:"FULL CHEMISTRY MOCK — complete past paper under timed conditions; analyse every error",pri:"H"},m:{t:"FULL COMBINED MATHS MOCK (Paper I + Paper II) — timed past paper; identify weak spots",pri:"H"}},
+{p:{t:"FINAL DAY: Flash-review all HIGH priority Physics — formulae sheet, common mistakes, exam technique",pri:"H"},c:{t:"FINAL DAY: Flash-review all HIGH priority Chemistry — reaction summaries, mechanisms, key equations",pri:"H"},m:{t:"FINAL DAY: Flash-review all HIGH priority Maths — key formulae (derivatives, integrals, dynamics), common errors, exam strategy",pri:"H"}}
+];
+
+const PL_TOTAL=45;
+const PL_SK='al45v2_done';
+const PL_SK2='al45v2_start';
+
+let plDone=new Set();
+let plStart;
+try{
+  const raw=localStorage.getItem(PL_SK);
+  if(raw) plDone=new Set(JSON.parse(raw));
+  plStart=localStorage.getItem(PL_SK2);
+}catch(e){}
+if(!plStart){plStart=new Date().toISOString().slice(0,10);try{localStorage.setItem(PL_SK2,plStart);}catch(e){}}
+
+function plSave(){try{localStorage.setItem(PL_SK,JSON.stringify([...plDone]));}catch(e){}}
+
+function plTodayIdx(){
+  const s=new Date(plStart),n=new Date();
+  s.setHours(0,0,0,0);n.setHours(0,0,0,0);
+  return Math.max(0,Math.min(Math.floor((n-s)/86400000),PL_TOTAL-1));
+}
+
+let plFilt='all';
+
+function plPriTag(p){
+  if(!p)return '';
+  return `<span class="pl-pri ${p==='H'?'pl-pri-h':'pl-pri-m'}">${p==='H'?'HIGH':'MED'}</span>`;
+}
+
+function plBuild(){
+  const g=document.getElementById('plGrid');
+  if(!g)return;
+  g.innerHTML='';
+  const ti=plTodayIdx();
+  const isRev=i=>PL_PLAN[i].p.t.startsWith('REVISION')||PL_PLAN[i].p.t.startsWith('FULL')||PL_PLAN[i].p.t.startsWith('FINAL');
+
+  PL_PLAN.forEach((day,i)=>{
+    const dn=i+1,isDone=plDone.has(i),isToday=i===ti,rev=isRev(i);
+    const c=document.createElement('div');
+    c.className='pl-day'+(isDone?' done-card':'')+(isToday?' today-card':'')+(rev?' rev-card':'');
+    c.dataset.pi=i;c.dataset.done=isDone?'1':'0';
+    c.innerHTML=`
+      <div class="pl-accent ${rev?'pl-acc-r':'pl-acc-n'}"></div>
+      <div class="pl-card-head">
+        <span class="pl-day-lbl">DAY ${String(dn).padStart(2,'0')}${rev?' <span class="pl-rev-tag">REVISION</span>':''}</span>
+        <div class="pl-head-right">
+          ${isToday?'<span class="pl-today-badge">TODAY</span>':''}
+          <button class="pl-cbtn" onclick="plTog(event,${i})" title="Mark done">${isDone?'✓':''}</button>
+        </div>
+      </div>
+      <div class="pl-topics">
+        <div class="pl-tr ph"><span class="pl-tlbl">PHY</span><span class="pl-topic-text">${day.p.t}</span>${plPriTag(day.p.pri)}</div>
+        <div class="pl-tr ch"><span class="pl-tlbl">CHE</span><span class="pl-topic-text">${day.c.t}</span>${plPriTag(day.c.pri)}</div>
+        <div class="pl-tr ma"><span class="pl-tlbl">MAT</span><span class="pl-topic-text">${day.m.t}</span>${plPriTag(day.m.pri)}</div>
+      </div>`;
+    plApplyF(c,plFilt);
+    g.appendChild(c);
+  });
+  plUpdateStats();
+}
+
+function plApplyF(card,f){
+  const isDone=card.dataset.done==='1';
+  let show=true;
+  if(f==='done2')show=isDone;
+  if(f==='todo')show=!isDone;
+  if(f==='ph')show=true;
+  if(f==='ch')show=true;
+  if(f==='ma')show=true;
+  card.classList.toggle('pl-hidden',!show);
+}
+
+window.plSetFilter=function(f,btn){
+  plFilt=f;
+  document.querySelectorAll('#page-coach .pl-fb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.pl-day').forEach(c=>plApplyF(c,f));
+};
+
+window.plTog=function(e,i){
+  e.stopPropagation();
+  plDone.has(i)?plDone.delete(i):plDone.add(i);
+  plSave();plBuild();
+  if(typeof toast==='function') toast(plDone.has(i)?'✓ Day '+(i+1)+' complete!':'↩ Day '+(i+1)+' unmarked',plDone.has(i)?'ok':'meh');
+};
+
+function plUpdateStats(){
+  const d=plDone.size,l=PL_TOTAL-d,pct=d/PL_TOTAL;
+  const ti=plTodayIdx();
+  let streak=0;
+  for(let i=ti;i>=0;i--){if(plDone.has(i))streak++;else break;}
+  const el=id=>document.getElementById(id);
+  if(el('plSToday'))el('plSToday').textContent=ti+1;
+  if(el('plSDone'))el('plSDone').textContent=d;
+  if(el('plSLeft'))el('plSLeft').textContent=l;
+  if(el('plSStreak'))el('plSStreak').textContent='🔥'+streak;
+  if(el('plRing'))el('plRing').style.strokeDashoffset=201.1-201.1*pct;
+  if(el('plPct'))el('plPct').textContent=Math.round(pct*100)+'% DONE';
+}
+
+// Init on page tab click
+const _origShowPage=window.showPage;
+window.showPage=function(id,el){
+  if(_origShowPage) _origShowPage(id,el);
+  if(id==='coach'){
+    // Lazily build on first visit
+    if(!document.querySelector('.pl-day')) plBuild();
+    else plUpdateStats();
+  }
+};
+
+// Also build immediately in case the planner tab is active on load
+document.addEventListener('DOMContentLoaded',()=>{
+  const el=document.getElementById('plDateInfo');
+  if(el) el.textContent='STARTED: '+plStart+' · 45-DAY INTENSIVE';
+  // Don't build yet — wait for tab click to keep startup fast
+  plUpdateStats(); // just update the counters
+});
 
 })();
 </script>
